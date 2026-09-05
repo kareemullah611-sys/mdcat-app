@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DIFFICULTIES, HISTORY_FILTERS, QUESTION_TYPES, SOURCE_TYPES, TEST_MODES } from "@/lib/constants";
+import { DIFFICULTIES, HISTORY_FILTERS, QUESTION_TYPES, QUESTION_STATUS, SOURCE_TYPES, TEST_MODES } from "@/lib/constants";
 
 export const letters = ["A", "B", "C", "D", "E", "F"] as const;
 export const letterFor = (index: number): string =>
@@ -77,9 +77,65 @@ export const createQuestionSchema = z.object({
   }
 });
 
+export const updateQuestionSchema = z.object({
+  questionText: z.string().min(5).optional(),
+  subjectId: z.string().min(1).optional(),
+  boardId: z.string().min(1).optional(),
+  classId: z.string().min(1).optional(),
+  chapterId: z.string().optional().nullable(),
+  topicId: z.string().optional().nullable(),
+  questionType: z.enum(QUESTION_TYPES).optional(),
+  difficulty: z.enum(DIFFICULTIES).optional(),
+  explanation: z.string().optional().nullable(),
+  sourceType: z.enum(SOURCE_TYPES).optional(),
+  sourceReference: z.string().optional().nullable(),
+  mdcatRelevanceScore: z.coerce.number().int().min(0).max(100).optional(),
+  status: z.enum(QUESTION_STATUS).optional(),
+  duplicateOfId: z.string().optional().nullable(),
+  issueReason: z.string().optional().nullable(),
+  options: z.array(z.object({ text: z.string().min(1), isCorrect: z.boolean() }))
+    .min(2).max(6).optional(),
+}).superRefine((data, ctx) => {
+  if (data.options) {
+    const correctCount = data.options.filter((o) => o.isCorrect).length;
+    if (correctCount !== 1) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["options"],
+        message: "Exactly one option must be marked correct.",
+      });
+    }
+  }
+});
+
 export const onboardingSchema = z.object({
   classId: z.string().min(1, "Select your class"),
   boardId: z.string().min(1, "Select your board"),
   goal: z.enum(["BOARD_EXAM", "MDCAT", "BOTH"]),
   subjectIds: z.array(z.string()).min(1, "Select at least one subject").max(10),
 });
+
+export const importRowSchema = z.object({
+  subjectCode: z.string().min(1, "Subject code is required"),
+  boardCode: z.string().min(1, "Board code is required"),
+  grade: z.coerce.number().int().min(11).max(12),
+  bookTitle: z.string().min(1, "Book title is required"),
+  chapter: z.string().min(1, "Chapter number is required"),
+  topic: z.string().min(1, "Topic title is required"),
+  question: z.string().min(5, "Question text is required"),
+  optionA: z.string().min(1, "Option A is required"),
+  optionB: z.string().min(1, "Option B is required"),
+  optionC: z.string().min(1, "Option C is required"),
+  optionD: z.string().min(1, "Option D is required"),
+  correct: z
+    .string()
+    .min(1, "Correct option is required")
+    .refine((v) => /^[A-D]$/.test(v.toUpperCase()), "Correct option must be A, B, C or D"),
+  difficulty: z.enum(DIFFICULTIES).optional().default("MEDIUM"),
+  questionType: z.enum(QUESTION_TYPES).optional().default("CONCEPTUAL"),
+  sourceReference: z.string().optional(),
+  explanation: z.string().optional(),
+  mdcatRelevanceScore: z.coerce.number().int().min(0).max(100).optional(),
+});
+
+export type ImportRow = z.infer<typeof importRowSchema>;

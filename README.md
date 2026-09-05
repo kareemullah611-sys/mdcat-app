@@ -100,7 +100,11 @@ The app is installable (V1 is a responsive installable PWA). Web app manifest is
 
 ## Seeding your own questions
 
-Sign in as admin → **Admin** (top-right) → **Books** to create a book, chapters, and topics, then **Questions** to add MCQs with a correct option. Questions go live for practice/exams immediately.
+Sign in as admin → **Admin** (top-right) → **Books** to create a book, chapters, and topics, then **Questions** to add MCQs with a correct option. Questions with an explanation and a quality score ≥ 60 go live for practice/exams immediately; low-quality ones stay visible to admins only.
+
+- **Edit / status**: each question row links to an edit page — fix wording, options, the correct answer, explanation, difficulty, source, or mark it a duplicate / flag a problem. Changes to a published question republish it immediately. Use row buttons to disable/archive, or permanently delete DRAFT questions only.
+- **Bulk import**: **Questions → Import from CSV** — download the template, fill one row per MCQ (subject/board/grade codes, book, chapter, topic, options, correct letter, difficulty, type, source, explanation), and upload. Every row is validated independently; invalid, duplicate or explanation-less rows are reported with their row numbers and skipped; valid rows are published with their Books/Chapters/Topics auto-created.
+- CSV column order follows the template; quoted fields and commas in question/option/explanation text are supported. Codes for subject (`BIOLOGY`/`CHEMISTRY`/`PHYSICS`), board (`FEDERAL`/`PUNJAB`/`SINDH`/`KPK`/`BALOCHISTAN`) and grade (`11`/`12`) must match the seeded reference data.
 
 ## Railway deployment
 

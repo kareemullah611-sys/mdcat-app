@@ -246,6 +246,9 @@ model Question {
   mdcatRelevanceScore Int      @default(50)
   qualityScore        Int      @default(50)
   status              String   @default("DRAFT") // DRAFT|VALIDATED|PUBLISHED|DISABLED|ARCHIVED (§25, §98)
+  // §26 duplicate / problematic markers
+  duplicateOfId       String?           // id of the question this one duplicates
+  issueReason         String?  @db.Text // why this question was flagged problematic
   createdById         String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -256,6 +259,8 @@ model Question {
   chapter       Chapter?          @relation(fields: [chapterId], references: [id])
   topic         Topic?            @relation(fields: [topicId], references: [id])
   createdBy     User?             @relation("questionCreator", fields: [createdById], references: [id])
+  duplicateOf   Question?         @relation("duplicateQuestion", fields: [duplicateOfId], references: [id])
+  duplicates    Question[]        @relation("duplicateQuestion")
   options       QuestionOption[]
   mappings      QuestionMapping[]
   testQuestions TestQuestion[]
@@ -269,6 +274,7 @@ model Question {
   @@index([difficulty, status])
   @@index([mdcatRelevanceScore])
   @@index([questionType])
+  @@index([duplicateOfId])
 }
 
 model QuestionOption {
