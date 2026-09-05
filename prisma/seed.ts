@@ -296,22 +296,40 @@ async function main() {
   let admin = await prisma.user.findUnique({ where: { email: adminEmail } });
   if (!admin) {
     const password = await hashPassword(adminPassword);
+    // Match better-auth's exact account shape (sign-up.mjs): accountId = userId,
+    // issuer = "local:credential". A mismatched shape makes sign-in return 401.
     admin = await prisma.user.create({
       data: {
         name: "Platform Admin",
         email: adminEmail,
         emailVerified: true,
         roleId: roleIds.SUPER_ADMIN,
-        accounts: {
-          create: {
-            accountId: adminEmail,
-            providerId: "credential",
-            password,
-          },
-        },
+      },
+    });
+    await prisma.account.create({
+      data: {
+        userId: admin.id,
+        accountId: admin.id,
+        providerId: "credential",
+        issuer: "local:credential",
+        password,
       },
     });
     console.log(`Created super admin ${adminEmail} (change the password after first login).`);
+  } else {
+    // Idempotently repair the legacy broken account shape (accountId was the email, issuer was null).
+    const credential = await prisma.account.findFirst({
+      where: { userId: admin.id, providerId: "credential" },
+    });
+    if (credential && credential.accountId !== admin.id) {
+      const password = await hashPassword(adminPassword);
+      await prisma.account.upsert({
+        where: { id: credential.id },
+        update: { accountId: admin.id, issuer: "local:credential", password },
+        create: { userId: admin.id, accountId: admin.id, providerId: "credential", issuer: "local:credential", password },
+      });
+      console.log(`Repaired credential account shape for ${adminEmail}.`);
+    }
   }
 
   // ---- Sample content (demo only; replaced by Phase 3 ingestion) ----
