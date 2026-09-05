@@ -1,0 +1,28 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1e293b"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="pageRight" x1="540" y1="300" x2="540" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#cbd5e1"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="232" fill="url(#bg)"/>
+
+  <!-- Open book -->
+  <!-- left page -->
+  <path d="M512 330 C420 290 330 305 268 340 L268 730 C330 695 420 680 512 720 Z"
+        fill="#ffffff"/>
+  <!-- right page -->
+  <path d="M512 330 C604 290 694 305 756 340 L756 730 C694 695 604 680 512 720 Z"
+        fill="url(#pageRight)"/>
+  <!-- spine -->
+  <path d="M512 330 L512 720" stroke="#94a3b8" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- checkmark -->
+  <path d="M340 520 L470 640 L700 410"
+        stroke="#10b981" stroke-width="78" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

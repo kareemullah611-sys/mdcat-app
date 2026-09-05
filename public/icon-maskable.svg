@@ -1,0 +1,27 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg"
+     aria-label="MDCAT Pakistan">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1e293b"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="pageRight" x1="540" y1="300" x2="540" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#cbd5e1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Full-bleed background for maskable icons (content sits in the 80% safe zone) -->
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+
+  <!-- Open book -->
+  <path d="M512 360 C448 332 382 342 336 368 L336 672 C382 646 448 636 512 664 Z"
+        fill="#ffffff"/>
+  <path d="M512 360 C576 332 642 342 688 368 L688 672 C642 646 576 636 512 664 Z"
+        fill="url(#pageRight)"/>
+  <path d="M512 360 L512 664" stroke="#94a3b8" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- checkmark -->
+  <path d="M396 524 L496 622 L660 472"
+        stroke="#10b981" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
