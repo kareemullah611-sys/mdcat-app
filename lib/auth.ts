@@ -6,6 +6,13 @@ import { ROLES } from "@/lib/constants";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
+  user: {
+    additionalFields: {
+      // Declared so the adapter persists roleId set by the databaseHooks below;
+      // otherwise better-auth's input transform silently drops undeclared fields.
+      roleId: { type: "string", required: false },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
