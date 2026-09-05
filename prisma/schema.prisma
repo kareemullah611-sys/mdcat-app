@@ -1,0 +1,395 @@
+// Pakistan Multi-Board MDCAT Preparation Platform
+// Phase 1 core academic model + auth. See requirements/product-spec.md.
+// Academic reference data (boards, classes, subjects, roles) lives in tables —
+// never hard-coded enums (§70, §101).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// AUTH + USERS (Better Auth compatible shapes)
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String   @id @default(cuid())
+  name          String?
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  roleId           String?
+  role             Role?           @relation(fields: [roleId], references: [id])
+  profile          StudentProfile?
+  sessions         Session[]
+  accounts         Account[]
+  tests            Test[]
+  answerHistory    AnswerHistory[]
+  bookmarks        Bookmark[]
+  createdQuestions Question[]      @relation("questionCreator")
+
+  @@index([roleId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Role {
+  id    String @id @default(cuid())
+  code  String @unique // STUDENT | ADMIN | SUPER_ADMIN
+  name  String
+  users User[]
+}
+
+// ---------------------------------------------------------------------------
+// STUDENT PROFILE (onboarding, §60-61)
+// ---------------------------------------------------------------------------
+
+model StudentProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  boardId         String?
+  classId         String?
+  goal            String? // BOARD_EXAM | MDCAT | BOTH
+  preparationMode String? // BOARD | MDCAT
+  targetExamYear  Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  board    Board?           @relation(fields: [boardId], references: [id])
+  class    SchoolClass?     @relation(fields: [classId], references: [id])
+  subjects StudentSubject[]
+
+  @@index([boardId])
+}
+
+model StudentSubject {
+  id        String         @id @default(cuid())
+  profileId String
+  subjectId String
+  profile   StudentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  subject   Subject        @relation(fields: [subjectId], references: [id])
+
+  @@unique([profileId, subjectId])
+}
+
+// ---------------------------------------------------------------------------
+// REFERENCE DIMENSIONS (seeded, not hard-coded §70)
+// ---------------------------------------------------------------------------
+
+model Board {
+  id               String            @id @default(cuid())
+  code             String            @unique // FBISE | PUNJAB | SINDH | KPK | BALOCHISTAN
+  name             String
+  region           String?
+  books            Book[]
+  questions        Question[]
+  profiles         StudentProfile[]
+  questionMappings QuestionMapping[]
+
+  @@index([code])
+}
+
+model SchoolClass {
+  id               String            @id @default(cuid())
+  name             String // "1st Year" | "2nd Year"
+  grade            Int // 11 | 12
+  books            Book[]
+  questions        Question[]
+  profiles         StudentProfile[]
+  questionMappings QuestionMapping[]
+
+  @@unique([grade])
+}
+
+model Subject {
+  id               String            @id @default(cuid())
+  code             String            @unique // BIOLOGY | CHEMISTRY | PHYSICS (future: ENGLISH, LOGICAL_REASONING)
+  name             String
+  books            Book[]
+  questions        Question[]
+  studentSubjects  StudentSubject[]
+  questionMappings QuestionMapping[]
+
+  @@index([code])
+}
+
+// ---------------------------------------------------------------------------
+// BOOKS + STRUCTURED CONTENT (§9-12)
+// ---------------------------------------------------------------------------
+
+model Book {
+  id              String   @id @default(cuid())
+  title           String
+  boardId         String
+  classId         String
+  subjectId       String
+  edition         String?
+  publicationYear Int?
+  publisher       String?
+  language        String   @default("ENGLISH")
+  version         String?
+  sourceUrl       String?
+  sourceLabel     String? // copyright / licensing note (§84)
+  fileUrl         String? // original PDF object key
+  status          String   @default("DRAFT") // DRAFT|PROCESSING|PUBLISHED|DISABLED|ARCHIVED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  board    Board       @relation(fields: [boardId], references: [id])
+  class    SchoolClass @relation(fields: [classId], references: [id])
+  subject  Subject     @relation(fields: [subjectId], references: [id])
+  chapters Chapter[]
+
+  @@index([boardId, classId, subjectId])
+  @@index([status])
+}
+
+model Chapter {
+  id        String   @id @default(cuid())
+  bookId    String
+  number    Int?
+  title     String
+  summary   String?  @db.Text
+  status    String   @default("DRAFT")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  book      Book       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  topics    Topic[]
+  questions Question[]
+
+  @@index([bookId, number])
+  @@index([status])
+}
+
+model Topic {
+  id        String   @id @default(cuid())
+  chapterId String
+  number    Int?
+  title     String
+  order     Int?
+  content   String?  @db.Text // structured/extracted academic text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  chapter   Chapter    @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@index([chapterId])
+}
+
+// ---------------------------------------------------------------------------
+// QUESTION BANK (§16-18)
+// ---------------------------------------------------------------------------
+
+model Question {
+  id                  String   @id @default(cuid())
+  questionText        String   @db.Text
+  subjectId           String
+  boardId             String?
+  classId             String?
+  chapterId           String?
+  topicId             String?
+  // CONCEPTUAL | FACTUAL | NUMERICAL | APPLICATION | STATEMENT_BASED |
+  // COMPARISON | DIAGRAM | REASONING | SEQUENCE | FORMULA | MDCAT_STYLE (§16)
+  questionType        String   @default("CONCEPTUAL")
+  difficulty          String   @default("MEDIUM") // EASY | MEDIUM | HARD
+  explanation         String?  @db.Text
+  // TEXTBOOK | PAST_MDCAT | AI_GENERATED | ADMIN_CREATED (§17)
+  sourceType          String   @default("TEXTBOOK")
+  sourceReference     String? // e.g. "Chapter 5, page 34"
+  mdcatRelevanceScore Int      @default(50)
+  qualityScore        Int      @default(50)
+  status              String   @default("DRAFT") // DRAFT|VALIDATED|PUBLISHED|DISABLED|ARCHIVED (§25, §98)
+  createdById         String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  subject       Subject           @relation(fields: [subjectId], references: [id])
+  board         Board?            @relation(fields: [boardId], references: [id])
+  class         SchoolClass?      @relation(fields: [classId], references: [id])
+  chapter       Chapter?          @relation(fields: [chapterId], references: [id])
+  topic         Topic?            @relation(fields: [topicId], references: [id])
+  createdBy     User?             @relation("questionCreator", fields: [createdById], references: [id])
+  options       QuestionOption[]
+  mappings      QuestionMapping[]
+  testQuestions TestQuestion[]
+  answerHistory AnswerHistory[]
+  bookmarks     Bookmark[]
+
+  @@index([subjectId, status])
+  @@index([boardId])
+  @@index([chapterId])
+  @@index([topicId])
+  @@index([difficulty, status])
+  @@index([mdcatRelevanceScore])
+  @@index([questionType])
+}
+
+model QuestionOption {
+  id         String   @id @default(cuid())
+  questionId String
+  text       String   @db.Text
+  isCorrect  Boolean  @default(false)
+  order      Int      @default(0)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+// Cross-board mapping — one question can map to many boards/chapters/concepts
+// while remaining a single row (§72-73).
+model QuestionMapping {
+  id              String       @id @default(cuid())
+  questionId      String
+  subjectId       String?
+  boardId         String?
+  chapterId       String?
+  topicId         String?
+  concept         String?
+  learningOutcome String?      @db.Text
+  schoolClassId   String?
+  board           Board?       @relation(fields: [boardId], references: [id])
+  class           SchoolClass? @relation(fields: [schoolClassId], references: [id])
+  question        Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  subject         Subject?     @relation(fields: [subjectId], references: [id])
+
+  @@index([questionId])
+  @@index([boardId])
+  @@index([subjectId])
+}
+
+// ---------------------------------------------------------------------------
+// EXAM / TEST ENGINE (§27-35)
+// ---------------------------------------------------------------------------
+
+model Test {
+  id               String    @id @default(cuid())
+  userId           String
+  mode             String    @default("PRACTICE") // PRACTICE|EXAM|PAST_PAPER|MOCK
+  boardIds         String[] // filter snapshot (rows preserved)
+  classIds         String[]
+  subjectIds       String[]
+  chapterIds       String[]
+  difficulty       String?
+  questionType     String?
+  mdcatRelevance   String?
+  historyFilter    String? // NEVER_ATTEMPTED|INCORRECT|CORRECT|BOOKMARKED|MIXED
+  totalQuestions   Int
+  timeLimitSeconds Int?
+  status           String    @default("IN_PROGRESS") // IN_PROGRESS|COMPLETED|ABANDONED
+  score            Int? // raw correct count
+  correctCount     Int?
+  incorrectCount   Int?
+  unansweredCount  Int?
+  timeUsedSeconds  Int?
+  startedAt        DateTime  @default(now())
+  submittedAt      DateTime?
+  createdAt        DateTime  @default(now())
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions TestQuestion[]
+
+  @@index([userId, status])
+  @@index([mode])
+}
+
+// Immutable snapshot of a question as presented in a specific test (§32, §75)
+model TestQuestion {
+  id               String    @id @default(cuid())
+  testId           String
+  questionId       String
+  orderIndex       Int
+  optionOrder      String[] // question option ids as presented (§32)
+  status           String    @default("UNANSWERED") // UNANSWERED|ANSWERED|MARKED
+  selectedOptionId String?
+  isCorrect        Boolean?
+  timeSpentSeconds Int?
+  answeredAt       DateTime?
+  createdAt        DateTime  @default(now())
+
+  test     Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id])
+
+  @@unique([testId, questionId])
+  @@index([questionId])
+}
+
+// Durable per-attempt log — foundation for mistake bank, mastery and AI tutor (§34-35)
+model AnswerHistory {
+  id               String   @id @default(cuid())
+  userId           String
+  questionId       String
+  testId           String?
+  selectedOptionId String?
+  isCorrect        Boolean
+  timeSpentSeconds Int?
+  mode             String // PRACTICE|EXAM|PAST_PAPER
+  createdAt        DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id])
+
+  @@index([userId, questionId])
+  @@index([userId, isCorrect])
+  @@index([questionId])
+}
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  userId     String
+  targetType String // QUESTION | CHAPTER | TOPIC | BOOK_PAGE
+  targetId   String
+  note       String?
+  createdAt  DateTime @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question? @relation(fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId])
+  @@index([userId])
+}
