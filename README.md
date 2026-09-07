@@ -108,7 +108,7 @@ Sign in as admin → **Admin** (top-right) → **Books** to create a book, chapt
 
 ## Railway deployment
 
-Deploy config is committed in `railway.json` (NixPacks builder, `npx prisma generate && npm run build`, pre-deploy `npx prisma migrate deploy`, start `npm run start`, healthcheck `/login`). Railway reads it automatically.
+Deploy config is committed in `railway.json` (build/start/healthcheck — NixPacks builder, `npx prisma generate && npm run build`, `npm run start`, healthcheck `/login`). Railway reads it automatically at deploy time. Note: Railway's legacy Config-as-Code (`railway.json`/`.railway.toml`) is deprecated and does **not** honor `preDeployCommand`; Railway recommends migrating to Infrastructure-as-Code (`.railway/railway.ts`) — see below.
 
 1. Create a Railway project and add two services:
    - **PostgreSQL** — Railway provisions the free volume.
@@ -119,13 +119,23 @@ Deploy config is committed in `railway.json` (NixPacks builder, `npx prisma gene
    - `BETTER_AUTH_URL` = `https://<your-service>.up.railway.app`.
    - `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` for first deployment.
    - `NODE_ENV=production`.
-3. Migrations run automatically on every deploy via the **Pre-deploy command** `npx prisma migrate deploy` (set in `railway.json`; can be overridden per-service in the dashboard):
+3. **Migrations** — the legacy `railway.json` does not run `preDeployCommand`, so use one of:
+   - Recommended: set a **Pre-deploy command** `npx prisma migrate deploy` on the web service in the Railway dashboard (runs before every deploy).
+   - Or once manually inside the running container:
+     ```
+     railway ssh -s web 'cd /app && node_modules/.bin/prisma migrate deploy'
+     ```
+   - Or migrate to Infrastructure-as-Code first (`.railway/railway.ts`, see below), which honors `preDeployCommand`.
 4. Seed reference data once after the first successful deploy (the seed is **idempotent** — reference rows are upserted, the admin is created once, 16 sample MCQs are inserted once):
    ```
-   npx prisma db seed
+   railway ssh -s web 'cd /app && node_modules/.bin/tsx prisma/seed.ts'
    ```
-   - The seed runner (`tsx`) is a devDependency — run this command inside a Build/Services shell (devDependencies present) rather than the running production instance, or promote `tsx` to a dependency.
+   - The seed runner (`tsx`) is a devDependency but ships in the deploy image (the repository is uploaded wholesale), so it runs inside the container.
 5. Deploy. The web service will open with `BETTER_AUTH_URL` as its own domain.
+
+### Deprecation note (Config-as-Code → IaC)
+
+Railway deprecates `railway.json`/`.railway.toml` in favour of `.railway/railway.ts` (Infrastructure-as-Code) — legacy config keeps working until 2026-12-01. To migrate: `railway config migrate` then re-deploy; IaC also lets you express the pre-deploy step properly. Existing services stay “unmanaged” until you adopt them into the file.
 
 ### Deploy checklist
 
@@ -133,7 +143,7 @@ Deploy config is committed in `railway.json` (NixPacks builder, `npx prisma gene
 - [ ] `DATABASE_URL` points at the Railway Postgres service
 - [ ] `BETTER_AUTH_SECRET` set (sessions are invalidated if it changes)
 - [ ] `BETTER_AUTH_URL` matches the public URL
-- [ ] Migrations run via pre-deploy `npx prisma migrate deploy` (in `railway.json`)
+- [ ] Migrations applied — recommended via dashboard Pre-deploy command (`npx prisma migrate deploy`); see "Migrations" above
 - [ ] `railway.json` committed (build/start/healthcheck are read from it)
 - [ ] Admin created via seed; change the default admin password after first login
 
