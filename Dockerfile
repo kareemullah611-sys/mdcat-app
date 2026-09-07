@@ -11,5 +11,6 @@ COPY . .
 RUN npx prisma generate && npm run build
 
 ENV NODE_ENV=production
-EXPOSE 3000
+ENV PORT=8080
+EXPOSE 8080
 CMD ["npm", "run", "start"]
