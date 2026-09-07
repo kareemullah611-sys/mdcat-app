@@ -18,6 +18,12 @@ export const auth = betterAuth({
     minPasswordLength: 8,
     maxPasswordLength: 128,
   },
+  trustedOrigins: [
+    "https://*.up.railway.app",
+    "https://mdcat-app-production.up.railway.app",
+    "https://mdcat-app-production-9395.up.railway.app",
+    "https://web-production-994bd.up.railway.app",
+  ],
   session: {
     expiresIn: 60 * 60 * 24 * 30, // 30 days
     cookieCache: { enabled: true, maxAge: 5 * 60 },
