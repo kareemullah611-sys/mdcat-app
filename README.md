@@ -108,32 +108,33 @@ Sign in as admin → **Admin** (top-right) → **Books** to create a book, chapt
 
 ## Railway deployment
 
+Deploy config is committed in `railway.json` (NixPacks builder, `npx prisma generate && npm run build`, pre-deploy `npx prisma migrate deploy`, start `npm run start`, healthcheck `/login`). Railway reads it automatically.
+
 1. Create a Railway project and add two services:
    - **PostgreSQL** — Railway provisions the free volume.
-   - **Web service** from this repo. Railway auto-detects Next.js.
+   - **Web service** connected to this GitHub repo (`kareemullah611-sys/mdcat-app`, branch `main`) — Railway then **auto-deploys on every push to `main`**. (Alternative: `railway up` from the CLI after `railway link`, or a manual deploy from `git push`; no auto-deploy.)
 2. On the web service → **Variables**, set:
    - `DATABASE_URL` = the Postgres service's connection string (Railway provides `DATABASE_URL` as a template — expand from the linked Postgres service).
    - `BETTER_AUTH_SECRET` = long random string (run `openssl rand -base64 48`).
    - `BETTER_AUTH_URL` = `https://<your-service>.up.railway.app`.
    - `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` for first deployment.
    - `NODE_ENV=production`.
-3. Add a **Pre-deploy command** so migrations run before the app starts:
+3. Migrations run automatically on every deploy via the **Pre-deploy command** `npx prisma migrate deploy` (set in `railway.json`; can be overridden per-service in the dashboard):
+4. Seed reference data once after the first successful deploy (the seed is **idempotent** — reference rows are upserted, the admin is created once, 16 sample MCQs are inserted once):
    ```
-   npx prisma migrate deploy
+   npx prisma db seed
    ```
-4. Seed reference data once (build script already runs it; see note below):
-   ```
-   prisma db seed
-   ```
-   - The seed is **idempotent**: reference rows (boards/classes/subjects/roles) are upserted, the admin is created once, and 16 sample MCQs are inserted once (guarded by an "already seeded" marker). It is safe to run on every build, but anything up to `npm run build`'s execution isn't guaranteed — run it manually after the first successful deploy.
+   - The seed runner (`tsx`) is a devDependency — run this command inside a Build/Services shell (devDependencies present) rather than the running production instance, or promote `tsx` to a dependency.
 5. Deploy. The web service will open with `BETTER_AUTH_URL` as its own domain.
 
 ### Deploy checklist
 
+- [ ] Web service connected to the GitHub repo → auto-deploy on push to `main`
 - [ ] `DATABASE_URL` points at the Railway Postgres service
 - [ ] `BETTER_AUTH_SECRET` set (sessions are invalidated if it changes)
 - [ ] `BETTER_AUTH_URL` matches the public URL
-- [ ] Pre-deploy command runs `npx prisma migrate deploy`
+- [ ] Migrations run via pre-deploy `npx prisma migrate deploy` (in `railway.json`)
+- [ ] `railway.json` committed (build/start/healthcheck are read from it)
 - [ ] Admin created via seed; change the default admin password after first login
 
 ## Notes / gotchas
