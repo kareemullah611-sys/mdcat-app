@@ -108,7 +108,7 @@ Sign in as admin → **Admin** (top-right) → **Books** to create a book, chapt
 
 ## Railway deployment
 
-Deploy config is committed in `railway.json` (build/start/healthcheck — NixPacks builder, `npx prisma generate && npm run build`, `npm run start`, healthcheck `/login`). Railway reads it automatically at deploy time. Note: Railway's legacy Config-as-Code (`railway.json`/`.railway.toml`) is deprecated and does **not** honor `preDeployCommand`; Railway recommends migrating to Infrastructure-as-Code (`.railway/railway.ts`) — see below.
+Deploy config is committed in `railway.json` (builder `DOCKERFILE` pointing at the committed root `Dockerfile`, start `npm run start`, healthcheck `/login`). Railway reads it automatically at deploy time; the Dockerfile pins Node 22 and runs a full `npm ci` + `npx prisma generate && npm run build`. Note: Railway's legacy Config-as-Code (`railway.json`/`.railway.toml`) is deprecated and does **not** honor `preDeployCommand`; Railway recommends migrating to Infrastructure-as-Code (`.railway/railway.ts`) — see below.
 
 1. Create a Railway project and add two services:
    - **PostgreSQL** — Railway provisions the free volume.
