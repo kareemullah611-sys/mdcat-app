@@ -45,7 +45,7 @@ export default async function AdminUsersPage({
   const qTrimmed = (q ?? "").trim();
   const activeRole = role && ROLE_LIST.includes(role as RoleCode) ? (role as RoleCode) : undefined;
   const activeProfile = profile === "COMPLETED" || profile === "PENDING" ? profile : undefined;
-  const weekAgo = daysAgo(7, new Date());
+  const weekAgo = daysAgo(7);
 
   const where = buildUsersWhere({ q: qTrimmed, role: activeRole, profile: activeProfile });
 
