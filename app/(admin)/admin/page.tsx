@@ -23,7 +23,13 @@ export default async function AdminDashboardPage() {
       <PageHeader title="Admin dashboard" subtitle="Platform and content overview." />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <Card><p className="text-xs text-slate-500">Users</p><p className="mt-1 text-2xl font-bold">{userCount}</p></Card>
+        <Link
+          href="/admin/users"
+          className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-slate-300 hover:shadow-md"
+        >
+          <p className="text-xs text-slate-500">Users</p>
+          <p className="mt-1 text-2xl font-bold">{userCount}</p>
+        </Link>
         <Card><p className="text-xs text-slate-500">Questions</p><p className="mt-1 text-2xl font-bold">{publishedQuestions}<span className="text-sm text-slate-400">/{questionCount}</span></p></Card>
         <Card><p className="text-xs text-slate-500">Books</p><p className="mt-1 text-2xl font-bold">{bookCount}</p></Card>
         <Card><p className="text-xs text-slate-500">Tests</p><p className="mt-1 text-2xl font-bold">{testCount}</p></Card>

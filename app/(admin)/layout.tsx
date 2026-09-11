@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/session";
 
 const ITEMS = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/users", label: "Users" },
   { href: "/admin/books", label: "Books" },
   { href: "/admin/questions", label: "Questions" },
 ];
