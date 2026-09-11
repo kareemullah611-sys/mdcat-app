@@ -3,9 +3,13 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/constants";
+import { trustedOrigins } from "@/lib/origin";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
+  // Pinned to the canonical origin configured for the environment; removes
+  // the auto-derived base URL warning and makes trusted origins explicit.
+  baseURL: process.env.BETTER_AUTH_URL,
   user: {
     additionalFields: {
       // Declared so the adapter persists roleId set by the databaseHooks below;
@@ -18,19 +22,16 @@ export const auth = betterAuth({
     minPasswordLength: 8,
     maxPasswordLength: 128,
   },
-  trustedOrigins: [
-    "https://*.up.railway.app",
-    "https://mdcat-app-production.up.railway.app",
-    "https://mdcat-app-production-9395.up.railway.app",
-    "https://web-production-994bd.up.railway.app",
-  ],
+  // Exact origins only (no wildcards, no dead domains, localhost only in dev).
+  trustedOrigins: trustedOrigins(),
   session: {
-    expiresIn: 60 * 60 * 24 * 30, // 30 days
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // re-issue cookie once per day (session rotation)
     cookieCache: { enabled: true, maxAge: 5 * 60 },
   },
   rateLimit: {
     window: 60,
-    max: 100,
+    max: 20,
   },
   databaseHooks: {
     user: {
