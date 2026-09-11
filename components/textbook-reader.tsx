@@ -33,6 +33,12 @@ export function TextbookReader({ bookId, title }: { bookId: string; title: strin
         <select className="rounded-lg border px-2 py-2 text-sm" value={zoom} onChange={(e) => setZoom(e.target.value)} aria-label="Zoom">
           <option value="page-width">Fit width</option><option value="page-fit">Fit page</option><option value="100">100%</option><option value="150">150%</option><option value="200">200%</option>
         </select>
+        <a
+          href={`/api/books/${bookId}/file?download=1`}
+          className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Download PDF
+        </a>
         <button className="ml-auto rounded-lg bg-slate-900 px-3 py-2 text-sm text-white" onClick={() => frame.current?.requestFullscreen()}>Full screen</button>
       </div>
       <iframe ref={frame} key={src} src={src} title={`Read ${title}`} className="h-[72vh] min-h-[520px] w-full bg-slate-100" />

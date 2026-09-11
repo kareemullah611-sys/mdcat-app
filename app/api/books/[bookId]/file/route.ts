@@ -10,14 +10,17 @@ export const runtime = "nodejs";
 export async function GET(request: Request, { params }: { params: Promise<{ bookId: string }> }) {
   if (!(await requireApiUser())) return Response.json({ error: "Unauthorized" }, { status: 401 });
   const { bookId } = await params;
-  const book = await prisma.book.findFirst({ where: { id: bookId, status: "PUBLISHED" }, select: { fileUrl: true } });
+  const book = await prisma.book.findFirst({ where: { id: bookId, status: "PUBLISHED" }, select: { fileUrl: true, title: true } });
   if (!book?.fileUrl) return Response.json({ error: "Textbook file unavailable" }, { status: 404 });
   const filePath = resolveTextbookFile(book.fileUrl);
   if (!filePath) return Response.json({ error: "Invalid textbook file" }, { status: 400 });
 
   let size: number;
   try { size = (await stat(filePath)).size; } catch { return Response.json({ error: "Textbook file missing" }, { status: 404 }); }
-  const common = { "Accept-Ranges": "bytes", "Content-Type": "application/pdf", "Content-Disposition": "inline" };
+  const download = new URL(request.url).searchParams.get("download") === "1";
+  const filename = `${book.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "textbook"}.pdf`;
+  const disposition = download ? `attachment; filename="${filename}"` : "inline";
+  const common = { "Accept-Ranges": "bytes", "Content-Type": "application/pdf", "Content-Disposition": disposition };
   const range = request.headers.get("range");
   if (!range) {
     return new Response(Readable.toWeb(createReadStream(filePath)) as ReadableStream, { headers: { ...common, "Content-Length": String(size) } });
