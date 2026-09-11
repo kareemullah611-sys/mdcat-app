@@ -13,6 +13,7 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "books:import:balochistan": "tsx scripts/import-balochistan-books.ts",
+    "books:import:fbise": "tsx scripts/import-fbise-books.ts",
     "test": "vitest run"
   },
   "prisma": {
