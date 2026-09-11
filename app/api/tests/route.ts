@@ -3,11 +3,20 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { testFilterSchema } from "@/lib/schemas";
 import { buildTest } from "@/lib/test-service";
+import { guardMutation } from "@/lib/request-guard";
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const guarded = guardMutation(request, "TEST_CREATE", session.user.id);
+  if (!guarded.ok) {
+    return NextResponse.json(
+      { error: guarded.status === 403 ? "Forbidden" : "Too many requests" },
+      { status: guarded.status, headers: { "Retry-After": String(guarded.retryAfterSeconds) } },
+    );
   }
 
   const body = await request.json().catch(() => null);

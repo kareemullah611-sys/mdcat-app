@@ -2,10 +2,19 @@ import { NextResponse } from "next/server";
 import { requireApiUser } from "@/lib/api-auth";
 import { onboardingSchema } from "@/lib/schemas";
 import { prisma } from "@/lib/prisma";
+import { guardMutation } from "@/lib/request-guard";
 
 export async function POST(request: Request) {
   const apiUser = await requireApiUser();
   if (!apiUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const guarded = guardMutation(request, "ONBOARDING", apiUser.userId);
+  if (!guarded.ok) {
+    return NextResponse.json(
+      { error: guarded.status === 403 ? "Forbidden" : "Too many requests" },
+      { status: guarded.status, headers: { "Retry-After": String(guarded.retryAfterSeconds) } },
+    );
+  }
 
   const body = await request.json().catch(() => null);
   const parsed = onboardingSchema.safeParse(body);

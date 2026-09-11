@@ -3,12 +3,29 @@ import { requireApiAdmin } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { parseImportCsv, validateImportRow, importTemplateCsv, HEADER_LABELS } from "@/lib/import";
 import { computeQualityScore } from "@/lib/validation";
+import { guardMutation } from "@/lib/request-guard";
 
 const REQUIRED_HEADERS = ["Subject Code", "Board Code", "Grade", "Book Title", "Chapter", "Topic", "Question", "Option A", "Option B", "Option C", "Option D", "Correct"];
+
+const MAX_CSV_BYTES = 5 * 1024 * 1024; // 5 MB uploaded payload
+const MAX_CSV_ROWS = 5000; // data rows (after the header)
 
 export async function POST(request: Request) {
   const admin = await requireApiAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const guarded = guardMutation(request, "ADMIN", admin.userId);
+  if (!guarded.ok) {
+    return NextResponse.json(
+      { error: guarded.status === 403 ? "Forbidden" : "Too many requests" },
+      { status: guarded.status, headers: { "Retry-After": String(guarded.retryAfterSeconds) } },
+    );
+  }
+
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
+  if (contentLength > MAX_CSV_BYTES) {
+    return NextResponse.json({ error: `CSV upload exceeds the ${Math.round(MAX_CSV_BYTES / 1024 / 1024)} MB limit.` }, { status: 413 });
+  }
 
   let csvText: string | null = null;
   const contentType = request.headers.get("content-type") ?? "";
@@ -39,6 +56,12 @@ export async function POST(request: Request) {
   const lines = parseImportCsv(csvText);
   if (lines.length < 2) {
     return NextResponse.json({ error: "CSV must have a header row and at least one data row." }, { status: 400 });
+  }
+  if (lines.length - 1 > MAX_CSV_ROWS) {
+    return NextResponse.json(
+      { error: `CSV exceeds the ${MAX_CSV_ROWS}-row import limit (got ${lines.length - 1} data rows).` },
+      { status: 413 },
+    );
   }
 
   const header = lines[0].map((h) => h.trim());
