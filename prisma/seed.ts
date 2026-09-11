@@ -295,12 +295,15 @@ async function main() {
   // Fail closed: in production a known default admin password is a P0. Only
   // allow the seed fallback when NODE_ENV is explicitly dev/test/staging.
   const isProd = process.env.NODE_ENV === "production";
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD;
-  if (isProd && !adminPassword) {
-    throw new Error(
-      "SEED_ADMIN_PASSWORD is required when NODE_ENV=production. Refusing to create an admin with a default password.",
-    );
-  }
+  const adminPassword: string =
+    process.env.SEED_ADMIN_PASSWORD ??
+    (isProd
+      ? (() => {
+          throw new Error(
+            "SEED_ADMIN_PASSWORD is required when NODE_ENV=production. Refusing to create an admin with a default password.",
+          );
+        })()
+      : "dev-admin-pw-invalid-not-for-prod");
   if (!isProd) {
     console.warn(
       "[seed] Creating the admin with the default development credential — set SEED_ADMIN_PASSWORD/SEED_ADMIN_EMAIL to override. Do NOT use this in production.",
