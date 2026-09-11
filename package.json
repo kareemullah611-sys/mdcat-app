@@ -2,6 +2,9 @@
   "name": "mdcat-app",
   "version": "0.1.0",
   "private": true,
+  "overrides": {
+    "mysql2": "^3.23.0"
+  },
   "engines": {
     "node": ">=20.9.0"
   },
