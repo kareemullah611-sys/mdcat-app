@@ -12,6 +12,14 @@ const books = [
   { grade: 12, subject: "CHEMISTRY", file: "balochistan-chemistry-12.pdf", title: "Chemistry Grade XII", chapters: ["s- and p-Block Elements", "d- and f-Block Elements", "Organic Chemistry", "Hydrocarbons", "Alkyl Halides and Amines", "Alcohols, Phenols and Ethers", "Aldehydes and Ketones", "Carboxylic Acids", "Biochemistry", "Industrial Chemistry", "Environmental Chemistry", "Analytical Chemistry"], start: 13 },
   { grade: 12, subject: "PHYSICS", file: "balochistan-physics-12.pdf", title: "Physics Grade XII", chapters: ["Electrostatics", "Current Electricity", "Electromagnetism", "Electromagnetic Induction", "Alternating Current", "Physics of Solids", "Electronics", "Dawn of Modern Physics", "Atomic Spectra", "Nuclear Physics"], start: 11 },
 ];
+const pageCounts: Record<string, number> = {
+  "balochistan-biology-11.pdf": 412,
+  "balochistan-chemistry-11.pdf": 340,
+  "balochistan-physics-11.pdf": 352,
+  "balochistan-biology-12.pdf": 424,
+  "balochistan-chemistry-12.pdf": 404,
+  "balochistan-physics-12.pdf": 373,
+};
 
 async function main() {
   const board = await prisma.board.findUniqueOrThrow({ where: { code: "BALOCHISTAN" } });
@@ -22,7 +30,7 @@ async function main() {
     const schoolClass = await prisma.schoolClass.findUniqueOrThrow({ where: { grade: item.grade } });
     const subject = await prisma.subject.findUniqueOrThrow({ where: { code: item.subject } });
     let book = await prisma.book.findFirst({ where: { boardId: board.id, classId: schoolClass.id, subjectId: subject.id, title: item.title } });
-    const data = { edition: "New Edition", publisher: "Balochistan Textbook Board, Quetta", language: "ENGLISH", sourceLabel, fileUrl: item.file, status: "PUBLISHED" };
+    const data = { edition: "New Edition", publisher: "Balochistan Textbook Board, Quetta", language: "ENGLISH", sourceLabel, fileUrl: item.file, pageCount: pageCounts[item.file], status: "PUBLISHED" };
     book = book ? await prisma.book.update({ where: { id: book.id }, data }) : await prisma.book.create({ data: { ...data, title: item.title, boardId: board.id, classId: schoolClass.id, subjectId: subject.id } });
     for (let i = 0; i < item.chapters.length; i++) {
       const number = (item.start ?? 1) + i;

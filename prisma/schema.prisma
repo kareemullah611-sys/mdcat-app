@@ -176,6 +176,7 @@ model Book {
   sourceUrl       String?
   sourceLabel     String? // copyright / licensing note (§84)
   fileUrl         String? // original PDF object key
+  pageCount       Int?
   status          String   @default("DRAFT") // DRAFT|PROCESSING|PUBLISHED|DISABLED|ARCHIVED
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

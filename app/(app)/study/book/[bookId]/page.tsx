@@ -44,7 +44,7 @@ export default async function BookPage({ params }: RouteProps) {
         <p className="mt-1 text-xs text-slate-400">{book.sourceLabel}</p>
       ) : null}
 
-      {book.fileUrl ? <TextbookReader bookId={book.id} title={book.title} /> : null}
+      {book.fileUrl ? <TextbookReader bookId={book.id} title={book.title} pageCount={book.pageCount} /> : null}
 
       <div className="mt-6">
         {book.chapters.length === 0 ? (
