@@ -292,7 +292,20 @@ async function main() {
 
   // Super admin (credential login)
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@mdcat.pk";
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "ChangeMe123!";
+  // Fail closed: in production a known default admin password is a P0. Only
+  // allow the seed fallback when NODE_ENV is explicitly dev/test/staging.
+  const isProd = process.env.NODE_ENV === "production";
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+  if (isProd && !adminPassword) {
+    throw new Error(
+      "SEED_ADMIN_PASSWORD is required when NODE_ENV=production. Refusing to create an admin with a default password.",
+    );
+  }
+  if (!isProd) {
+    console.warn(
+      "[seed] Creating the admin with the default development credential — set SEED_ADMIN_PASSWORD/SEED_ADMIN_EMAIL to override. Do NOT use this in production.",
+    );
+  }
   let admin = await prisma.user.findUnique({ where: { email: adminEmail } });
   if (!admin) {
     const password = await hashPassword(adminPassword);
