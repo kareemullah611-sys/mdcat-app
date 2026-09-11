@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Large, locally-managed textbook PDFs (use object storage in production)
+/storage/textbooks/*.pdf

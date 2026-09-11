@@ -19,7 +19,7 @@ export default async function AdminBooksPage() {
 
   return (
     <div>
-      <PageHeader title="Books" subtitle={`${books.length} books · ${chapterCount} chapters. PDF ingestion arrives in Phase 3.`} />
+      <PageHeader title="Books" subtitle={`${books.length} books · ${chapterCount} chapters · managed textbook files.`} />
 
       <Card>
         <h2 className="mb-4 font-semibold">Add book</h2>

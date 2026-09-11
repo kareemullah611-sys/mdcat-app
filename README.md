@@ -68,6 +68,7 @@ npm run start        # run the production build
 npm run lint         # ESLint
 npm run test         # Vitest unit tests
 npm run db:seed      # reseed reference data + sample questions
+npm run books:import:balochistan # register six PDFs placed in storage/textbooks
 npm run db:migrate   # prisma migrate dev (for schema changes)
 ```
 

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireProfile } from "@/lib/session";
 import { Badge } from "@/components/ui";
+import { TextbookReader } from "@/components/textbook-reader";
 
 type RouteProps = { params: Promise<{ bookId: string }> };
 
@@ -42,6 +43,8 @@ export default async function BookPage({ params }: RouteProps) {
       {book.sourceLabel ? (
         <p className="mt-1 text-xs text-slate-400">{book.sourceLabel}</p>
       ) : null}
+
+      {book.fileUrl ? <TextbookReader bookId={book.id} title={book.title} /> : null}
 
       <div className="mt-6">
         {book.chapters.length === 0 ? (
