@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signUp, signIn } from "@/lib/auth-client";
 import { Button, Field, Input } from "@/components/ui";
+import { normalizePakistanMobile } from "@/lib/pakistan-phone";
 
 export default function SignupPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -20,9 +22,14 @@ export default function SignupPage() {
       setError("Password must be at least 10 characters.");
       return;
     }
+    const normalizedPhone = normalizePakistanMobile(phoneNumber);
+    if (!normalizedPhone) {
+      setError("Enter a valid Pakistan mobile number, for example 03001234567.");
+      return;
+    }
     setError(null);
     setLoading(true);
-    const res = await signUp.email({ name, email, password });
+    const res = await signUp.email({ name, email, password, phoneNumber: normalizedPhone });
     if (res.error) {
       setError(res.error.message ?? "Unable to create account.");
       setLoading(false);
@@ -57,6 +64,18 @@ export default function SignupPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+          />
+        </Field>
+        <Field label="Pakistan mobile number" hint="Format: 03XX XXXXXXX. SMS verification will be added before the number is used as a security factor.">
+          <Input
+            type="tel"
+            required
+            inputMode="tel"
+            autoComplete="tel-national"
+            placeholder="0300 1234567"
+            maxLength={18}
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
           />
         </Field>
         <Field label="Password" hint="At least 10 characters.">

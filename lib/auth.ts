@@ -7,6 +7,8 @@ import { ROLES } from "@/lib/constants";
 import { trustedOrigins } from "@/lib/origin";
 import { queueAuthEmail } from "@/lib/auth-email";
 import { securityLogCredentialEvent } from "@/lib/security-log";
+import { isPakistanMobile, normalizePakistanMobile } from "@/lib/pakistan-phone";
+import { z } from "zod";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
@@ -17,7 +19,15 @@ export const auth = betterAuth({
     additionalFields: {
       // Declared so the adapter persists roleId set by the databaseHooks below;
       // otherwise better-auth's input transform silently drops undeclared fields.
-      roleId: { type: "string", required: false },
+      roleId: { type: "string", required: false, input: false },
+      phoneNumber: {
+        type: "string",
+        required: true,
+        unique: true,
+        validator: { input: z.string().refine(isPakistanMobile, "Enter a valid Pakistan mobile number.") },
+        transform: { input: (value) => normalizePakistanMobile(String(value)) ?? value },
+      },
+      phoneNumberVerified: { type: "boolean", required: false, defaultValue: false, input: false },
     },
     changeEmail: {
       enabled: true,

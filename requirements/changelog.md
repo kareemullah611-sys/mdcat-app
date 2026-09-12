@@ -10,6 +10,7 @@ Format: `YYYY-MM-DD — {ADDED | MODIFIED | REPLACED | REMOVED | ARCHITECTURAL}`
 - **ADDED** — Grounded Biology Grade XI pilot pipeline: 100 FBISE/Balochistan MCQs, exactly 15 easy / 70 medium / 15 hard, with deterministic validation, syllabus mapping, evidence metadata, duplicate protection, and idempotent import.
 - **CORRECTED** — Biology Grade XI chapter names and PDF page ranges for FBISE and Balochistan imports so reader navigation and MCQ provenance match the uploaded books.
 - **ADDED** — Professional account recovery: single-use 30-minute password reset links, session revocation, verified two-stage email changes, current-password reauthentication, dedicated rate limits, generic anti-enumeration responses, security logging, and transactional email templates.
+- **ADDED** — Required Pakistan mobile number at registration, normalized to E.164 (`+923XXXXXXXXX`) with matching server/client validation and a separate verification-state field for a future SMS OTP security factor.
 
 ## 2026-09-05 — Initial baseline
 
