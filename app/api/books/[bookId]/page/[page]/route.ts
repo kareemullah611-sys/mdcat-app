@@ -127,8 +127,22 @@ async function renderPage(
       ["-f", String(page), "-l", String(page), "-singlefile", "-jpeg", "-r", dpi, "-jpegopt", `quality=${jpegQuality},progressive=y,optimize=y`, source, prefix],
       { timeout: RENDER_TIMEOUT_MS, maxBuffer: RENDER_MAX_BUFFER, signal },
     );
-    await rename(generated, cached);
-    return await readFile(cached);
+    try {
+      await rename(generated, cached);
+      return await readFile(cached);
+    } catch (cacheWriteError) {
+      // On-volume reader-cache unrdu WRITABLE by this non-root runtime
+      // (read-only mount or legacy root-owned subtree). Fail-open: serve the
+      // freshly rendered page for THIS request instead of 500ing. Sources are
+      // never written; retried on the next request; already-cached pages are
+      // still served from the cache.
+      console.error("textbook.cache_write_degraded", {
+        book: process.env.TEXTBOOK_BOOK_ID_SANITIZED || undefined,
+        page,
+        error: cacheWriteError instanceof Error ? cacheWriteError.message : String(cacheWriteError),
+      });
+      return await readFile(generated);
+    }
   } catch (error) {
     await unlink(generated).catch(() => {});
     if (error instanceof Error && (error.name === "AbortError" || (signal?.aborted === true))) {

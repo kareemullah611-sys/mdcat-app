@@ -6,10 +6,11 @@ export const dynamic = "force-dynamic";
 const DB_TIMEOUT_MS = 3000;
 
 /**
- * Liveness/readiness probe used by the Railway healthcheck. Performs a light,
- * constant SQL round-trip (no user input) so it stays cheap but detects a dead
- * database. Always answers 200 so the platform never pulls a healthy instance
- * over a transient hiccup; DB state is reported in the body.
+ * Railway readiness probe. Returns 200 "ok" only when the database is
+ * reachable, and 503 when it is not, so a dead/misconfigured Postgres takes
+ * the instance out of rotation instead of happily serving 200 on a broken
+ * stack. Body is deliberately secret-free (no SQL errors, no credentials) and
+ * never echoes user input.
  */
 export async function GET() {
   let db: "up" | "down" = "down";
@@ -22,7 +23,7 @@ export async function GET() {
     ]);
     db = "up";
   } catch (error) {
-    // No secrets or PII in a health probe.
+    // Log server-side only; never leak the driver message to the probe body.
     console.error("health: db ping failed", error instanceof Error ? error.message : "unknown");
   }
   return Response.json(
@@ -31,6 +32,6 @@ export async function GET() {
       db,
       uptime: Math.round(process.uptime()),
     },
-    { status: 200 },
+    { status: db === "up" ? 200 : 503 },
   );
 }
