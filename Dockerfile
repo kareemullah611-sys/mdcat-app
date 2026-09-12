@@ -29,6 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       poppler-utils \
       openssl \
       ca-certificates \
+      gosu \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --chown=node:node --from=build /app/package.json ./package.json
@@ -37,9 +38,11 @@ COPY --chown=node:node --from=build /app/.next ./.next
 COPY --chown=node:node --from=build /app/public ./public
 COPY --chown=node:node --from=build /app/next.config.ts ./next.config.ts
 COPY --chown=node:node --from=build /app/prisma ./prisma
+COPY --chown=root:root docker-entrypoint.sh /usr/local/bin/mdcat-entrypoint
+RUN chmod 0755 /usr/local/bin/mdcat-entrypoint
 
-# Non-root runtime. Source PDFs on the shared volume are read-only 755/644, so
-# `node` can read them; the render cache lives in TEXTBOOK_CACHE_DIR (writable).
-USER node
+# The entrypoint starts as root only long enough to make the mounted cache root
+# writable, then permanently drops to `node` before migrations or app code run.
+ENTRYPOINT ["/usr/local/bin/mdcat-entrypoint"]
 EXPOSE 8080
 CMD ["npm", "run", "start"]

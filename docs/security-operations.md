@@ -14,6 +14,9 @@ incident procedures of the organization operating the service.
 - Mount the Railway volume at `/data/textbooks` and set `TEXTBOOK_STORAGE_DIR`
   accordingly. Keep the rendered-page cache on the volume only if its growth is
   monitored; cached pages can be regenerated and are not backup-critical.
+- Container startup creates/chowns only the configured reader-cache root, then
+  drops permanently to the unprivileged `node` user before migrations and app
+  startup. Original PDF ownership and permissions are not changed.
 - Grant Railway workspace and Git hosting access using individual accounts and
   least privilege. Remove former operators immediately and review access monthly.
 - Never run the production seed without a unique `SEED_ADMIN_PASSWORD`. Remove
