@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { twoFactor } from "better-auth/plugins";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/constants";
 import { trustedOrigins } from "@/lib/origin";
@@ -47,5 +48,13 @@ export const auth = betterAuth({
       },
     },
   },
-  plugins: [nextCookies()],
+  plugins: [
+    twoFactor({
+      issuer: "MDCAT Pakistan",
+      twoFactorCookieMaxAge: 10 * 60,
+      trustDeviceMaxAge: 7 * 24 * 60 * 60,
+      accountLockout: { enabled: true, maxFailedAttempts: 8, durationSeconds: 15 * 60 },
+    }),
+    nextCookies(),
+  ],
 });

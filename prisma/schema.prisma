@@ -18,13 +18,14 @@ datasource db {
 // ---------------------------------------------------------------------------
 
 model User {
-  id            String   @id @default(cuid())
-  name          String?
-  email         String   @unique
-  emailVerified Boolean  @default(false)
-  image         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id               String   @id @default(cuid())
+  name             String?
+  email            String   @unique
+  emailVerified    Boolean  @default(false)
+  twoFactorEnabled Boolean  @default(false)
+  image            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   roleId           String?
   role             Role?           @relation(fields: [roleId], references: [id])
@@ -35,8 +36,23 @@ model User {
   answerHistory    AnswerHistory[]
   bookmarks        Bookmark[]
   createdQuestions Question[]      @relation("questionCreator")
+  twoFactors       TwoFactor[]
 
   @@index([roleId])
+}
+
+model TwoFactor {
+  id                      String    @id @default(cuid())
+  secret                  String
+  backupCodes             String
+  userId                  String
+  verified                Boolean   @default(true)
+  failedVerificationCount Int       @default(0)
+  lockedUntil             DateTime?
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([secret])
+  @@index([userId])
 }
 
 model Session {
@@ -249,7 +265,7 @@ model Question {
   qualityScore        Int      @default(50)
   status              String   @default("DRAFT") // DRAFT|VALIDATED|PUBLISHED|DISABLED|ARCHIVED (§25, §98)
   // §26 duplicate / problematic markers
-  duplicateOfId       String?           // id of the question this one duplicates
+  duplicateOfId       String? // id of the question this one duplicates
   issueReason         String?  @db.Text // why this question was flagged problematic
   createdById         String?
   createdAt           DateTime @default(now())

@@ -34,6 +34,21 @@ Logs intentionally exclude passwords, cookies, tokens, request bodies, raw IP
 addresses, and database errors. Retain logs according to the operator's privacy
 policy and restrict them to administrators.
 
+## Administrator MFA
+
+Production requires admin MFA unless `ADMIN_MFA_REQUIRED=false` is deliberately
+set for the short database-migration window. After the MFA migration is applied,
+remove that override (or set it to `true`). Each administrator enrolls at
+`/admin/2fa`, verifies a TOTP code, and stores the one-time recovery codes
+offline. Do not email, screenshot, or paste the TOTP URI or recovery codes.
+
+If an administrator loses the authenticator, use a recovery code. If all codes
+are lost, a second authorized operator must verify the person's identity, take a
+fresh database backup, revoke the user's sessions, delete only that user's
+`TwoFactor` row, and set that user's `twoFactorEnabled` to false in one database
+transaction. Record the incident and have the user immediately sign in and
+re-enroll. Never disable the production MFA feature globally to recover one user.
+
 ## Incident response
 
 1. Contain: disable the affected account, revoke sessions, restrict the service
@@ -56,4 +71,3 @@ migrations in a maintenance window, take a fresh backup first, and keep schema
 changes separate from unrelated application hardening. After deployment verify
 health, login, admin authorization, one uncached reader page, byte-range PDF
 download, and one non-destructive student test flow.
-

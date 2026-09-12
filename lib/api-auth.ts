@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/constants";
 import { securityLogAuthFailure } from "@/lib/security-log";
+import { adminMfaRequired } from "@/lib/mfa";
 
 export async function requireApiUser(): Promise<{ userId: string } | null> {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -31,6 +32,10 @@ export async function requireApiAdmin(): Promise<{ userId: string } | null> {
     user.role?.code === ROLES.ADMIN || user.role?.code === ROLES.SUPER_ADMIN;
   if (!admin) {
     securityLogAuthFailure("role_denied");
+    return null;
+  }
+  if (adminMfaRequired() && !user.twoFactorEnabled) {
+    securityLogAuthFailure("mfa_required");
     return null;
   }
   return { userId: user.id };

@@ -58,7 +58,7 @@ export function securityLogError(event: string, meta?: Record<string, unknown>):
 }
 
 /** Authorization denial — always "auth.failure" with reason context. */
-export function securityLogAuthFailure(reason: "missing_session" | "user_not_found" | "role_denied"): void {
+export function securityLogAuthFailure(reason: "missing_session" | "user_not_found" | "role_denied" | "mfa_required"): void {
   securityLog("auth.failure", { reason }, "warn");
 }
 
