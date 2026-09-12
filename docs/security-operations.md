@@ -71,3 +71,9 @@ migrations in a maintenance window, take a fresh backup first, and keep schema
 changes separate from unrelated application hardening. After deployment verify
 health, login, admin authorization, one uncached reader page, byte-range PDF
 download, and one non-destructive student test flow.
+
+The production start command runs `prisma migrate deploy` before `next start`.
+An additive migration therefore completes inside Railway's private network
+before the new instance becomes ready. If migration fails, the new deployment
+must remain unhealthy and the previous healthy deployment must keep serving;
+never bypass this by forcing the new instance online.
