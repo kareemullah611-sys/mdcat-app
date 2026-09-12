@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button, Field, Input } from "@/components/ui";
 
 export default function TwoFactorPage() {
-  const router = useRouter();
   const [code, setCode] = useState("");
   const [backupMode, setBackupMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,8 +22,9 @@ export default function TwoFactorPage() {
       setError(result.error.message ?? "The verification code is invalid or expired.");
       return;
     }
-    router.replace("/dashboard");
-    router.refresh();
+    // Verification changes the authenticated session. Reload the document so
+    // the server receives the final session instead of reusing the pre-2FA tree.
+    window.location.replace(new URL("/dashboard", window.location.origin));
   }
 
   return (

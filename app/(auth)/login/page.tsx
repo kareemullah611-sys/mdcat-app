@@ -21,6 +21,10 @@ export default function LoginPage() {
       setError(res.error.message ?? "Unable to sign in.");
       return;
     }
+    // The Better Auth two-factor client redirects admins that still need to
+    // verify. Do not overwrite that navigation with the post-login destination.
+    if (res.data?.twoFactorRedirect) return;
+
     // Authentication changes the session cookie and therefore the server-rendered
     // route tree. Start a fresh document request so browsers do not try to reuse
     // the anonymous RSC tree while navigating into the authenticated app.

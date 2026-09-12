@@ -34,6 +34,12 @@ export const auth = betterAuth({
     window: 60,
     max: 20,
   },
+  advanced: {
+    // Railway terminates TLS at its edge and supplies the connecting client in
+    // this single-value header. Keep X-Forwarded-For as a fallback for local or
+    // alternate deployments where it contains one unambiguous address.
+    ipAddress: { ipAddressHeaders: ["x-real-ip", "x-forwarded-for"] },
+  },
   databaseHooks: {
     user: {
       create: {
