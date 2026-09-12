@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "@/lib/auth-client";
 import { Button, Field, Input } from "@/components/ui";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,8 +21,10 @@ export default function LoginPage() {
       setError(res.error.message ?? "Unable to sign in.");
       return;
     }
-    router.push("/dashboard");
-    router.refresh();
+    // Authentication changes the session cookie and therefore the server-rendered
+    // route tree. Start a fresh document request so browsers do not try to reuse
+    // the anonymous RSC tree while navigating into the authenticated app.
+    window.location.assign(new URL("/dashboard", window.location.origin));
   }
 
   return (
