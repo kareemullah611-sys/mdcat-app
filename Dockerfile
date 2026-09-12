@@ -37,6 +37,7 @@ COPY --chown=node:node --from=build /app/node_modules ./node_modules
 COPY --chown=node:node --from=build /app/.next ./.next
 COPY --chown=node:node --from=build /app/public ./public
 COPY --chown=node:node --from=build /app/next.config.ts ./next.config.ts
+COPY --chown=node:node --from=build /app/tsconfig.json ./tsconfig.json
 COPY --chown=node:node --from=build /app/prisma ./prisma
 # Keep reviewed maintenance commands available for one-off Railway SSH runs.
 COPY --chown=node:node --from=build /app/scripts ./scripts
