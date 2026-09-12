@@ -4,16 +4,18 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { submitExam } from "@/lib/test-service";
 import { guardMutation } from "@/lib/request-guard";
+import { securityLogTestMutation } from "@/lib/security-log";
+import { INPUT_LIMITS } from "@/lib/input-limits";
 
 const submitSchema = z.object({
   answers: z.array(
     z.object({
-      questionId: z.string().min(1),
-      selectedOptionId: z.string().nullable(),
+      questionId: z.string().min(1).max(INPUT_LIMITS.identifier),
+      selectedOptionId: z.string().min(1).max(INPUT_LIMITS.identifier).nullable(),
       timeSpentSeconds: z.number().int().min(0).max(3_600).optional(),
-    }),
+    }).strict(),
   ).max(400),
-});
+}).strict();
 
 type RouteContext = { params: Promise<{ testId: string }> };
 
@@ -32,6 +34,7 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const { testId } = await context.params;
+  if (testId.length > INPUT_LIMITS.identifier) return NextResponse.json({ error: "Invalid test" }, { status: 400 });
   const body = await request.json().catch(() => null);
   const parsed = submitSchema.safeParse(body);
   if (!parsed.success) {
@@ -45,6 +48,7 @@ export async function POST(request: Request, context: RouteContext) {
       result.error === "NOT_FOUND" ? 404 : result.error === "FORBIDDEN" ? 403 : 409;
     return NextResponse.json({ error: result.error }, { status });
   }
+  securityLogTestMutation("submit", session.user.id, testId);
 
   return NextResponse.json({ ok: true, testId });
 }

@@ -1,5 +1,5 @@
 import { isAllowedOrigin } from "@/lib/origin";
-import { securityLog } from "@/lib/security-log";
+import { securityLogOriginMismatch } from "@/lib/security-log";
 
 export function sameOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
@@ -9,7 +9,7 @@ export function sameOrigin(request: Request): boolean {
 export function requireSameOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
   if (origin !== null && !isAllowedOrigin(origin)) {
-    securityLog("security.origin_mismatch", { origin });
+    securityLogOriginMismatch(origin);
     return false;
   }
   return true;

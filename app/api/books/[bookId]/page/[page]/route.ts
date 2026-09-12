@@ -7,7 +7,7 @@ import { requireApiUser } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { readerCacheRoot, resolveTextbookFile } from "@/lib/textbook-storage";
 import { guardRead } from "@/lib/request-guard";
-import { securityLogError } from "@/lib/security-log";
+import { securityLogError, securityLogTextbookSuspicious } from "@/lib/security-log";
 
 export const runtime = "nodejs";
 
@@ -64,6 +64,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ book
   const page = Number(rawPage);
   const qualityKey = new URL(request.url).searchParams.get("quality") || "standard";
   if (!Number.isInteger(page) || page < 1 || !QUALITY_KEYS.has(qualityKey)) {
+    securityLogTextbookSuspicious("invalid_page", bookId);
     return Response.json({ error: "Invalid page request" }, { status: 400 });
   }
   const quality = qualities[qualityKey as keyof typeof qualities];
@@ -75,7 +76,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ book
     return Response.json({ error: "Page unavailable" }, { status: 404 });
   }
   const source = resolveTextbookFile(book.fileUrl);
-  if (!source) return Response.json({ error: "Invalid textbook file" }, { status: 400 });
+  if (!source) {
+    securityLogTextbookSuspicious("invalid_file_key", bookId);
+    return Response.json({ error: "Invalid textbook file" }, { status: 400 });
+  }
   try {
     await stat(source);
   } catch {

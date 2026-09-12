@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { testFilterSchema } from "@/lib/schemas";
 import { buildTest } from "@/lib/test-service";
 import { guardMutation } from "@/lib/request-guard";
+import { securityLogTestMutation } from "@/lib/security-log";
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
 
   try {
     const test = await buildTest(session.user.id, parsed.data);
+    securityLogTestMutation("create", session.user.id, test.id);
     return NextResponse.json({ testId: test.id }, { status: 201 });
   } catch (err) {
     if (err instanceof Error && err.name === "EmptyPoolError") {

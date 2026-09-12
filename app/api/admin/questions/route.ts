@@ -3,6 +3,7 @@ import { requireApiAdmin } from "@/lib/api-auth";
 import { createQuestionSchema } from "@/lib/schemas";
 import { prisma } from "@/lib/prisma";
 import { guardMutation } from "@/lib/request-guard";
+import { securityLogAdminMutation } from "@/lib/security-log";
 
 export async function POST(request: Request) {
   const admin = await requireApiAdmin();
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
       options: { create: options.map((o, i) => ({ text: o.text, isCorrect: o.isCorrect, order: i })) },
     },
   });
+  securityLogAdminMutation({ action: "create", actorId: admin.userId, resourceType: "question", resourceId: question.id });
 
   return NextResponse.json({ id: question.id }, { status: 201 });
 }

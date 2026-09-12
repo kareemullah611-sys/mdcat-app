@@ -4,6 +4,7 @@ import { updateQuestionSchema } from "@/lib/schemas";
 import { prisma } from "@/lib/prisma";
 import { validateQuestion, computeQualityScore } from "@/lib/validation";
 import { guardMutation } from "@/lib/request-guard";
+import { securityLogAdminMutation } from "@/lib/security-log";
 
 export async function PATCH(
   request: Request,
@@ -83,6 +84,7 @@ export async function PATCH(
     });
     return updated;
   });
+  securityLogAdminMutation({ action: "update", actorId: admin.userId, resourceType: "question", resourceId: result.id });
 
   return NextResponse.json(result);
 }
@@ -110,5 +112,6 @@ export async function DELETE(
   }
 
   await prisma.question.delete({ where: { id: questionId } });
+  securityLogAdminMutation({ action: "delete", actorId: admin.userId, resourceType: "question", resourceId: questionId });
   return NextResponse.json({ ok: true });
 }

@@ -3,6 +3,7 @@ import { requireApiAdmin } from "@/lib/api-auth";
 import { createTopicSchema } from "@/lib/schemas";
 import { prisma } from "@/lib/prisma";
 import { guardMutation } from "@/lib/request-guard";
+import { securityLogAdminMutation } from "@/lib/security-log";
 
 export async function GET(request: Request) {
   const admin = await requireApiAdmin();
@@ -39,5 +40,6 @@ export async function POST(request: Request) {
   }
 
   const topic = await prisma.topic.create({ data: parsed.data });
+  securityLogAdminMutation({ action: "create", actorId: admin.userId, resourceType: "topic", resourceId: topic.id });
   return NextResponse.json({ id: topic.id }, { status: 201 });
 }

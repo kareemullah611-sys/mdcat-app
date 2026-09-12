@@ -1,6 +1,6 @@
 import { isAllowedOrigin } from "@/lib/origin";
 import { clientIp, rateLimit, RATE_LIMITS, type RateLimitKey } from "@/lib/rate-limit";
-import { securityLog } from "@/lib/security-log";
+import { securityLogOriginMismatch, securityLogRateLimited } from "@/lib/security-log";
 
 export type GuardResult =
   | { ok: true }
@@ -18,13 +18,13 @@ export function guardMutation(
 ): GuardResult {
   const origin = request.headers.get("origin");
   if (origin !== null && !isAllowedOrigin(origin)) {
-    securityLog("security.origin_mismatch", { origin, scope });
+    securityLogOriginMismatch(origin, scope);
     return { ok: false, status: 403, retryAfterSeconds: 0 };
   }
   const key = subjectKey ?? `ip:${clientIp(request)}`;
   const result = rateLimit(`mutation:${scope}:${key}`, RATE_LIMITS[scope]);
   if (!result.ok) {
-    securityLog("security.rate_limited", { scope, key: subjectKey ? "user" : "ip" });
+    securityLogRateLimited(scope, subjectKey ? "user" : "ip");
     return { ok: false, status: 429, retryAfterSeconds: result.retryAfterSeconds };
   }
   return { ok: true };
@@ -34,7 +34,7 @@ export function guardRead(request: Request, scope: RateLimitKey, subjectKey?: st
   const key = subjectKey ?? `ip:${clientIp(request)}`;
   const result = rateLimit(`read:${scope}:${key}`, RATE_LIMITS[scope]);
   if (!result.ok) {
-    securityLog("security.rate_limited", { scope, key: subjectKey ? "user" : "ip" });
+    securityLogRateLimited(scope, subjectKey ? "user" : "ip");
     return { ok: false, status: 429, retryAfterSeconds: result.retryAfterSeconds };
   }
   return { ok: true };

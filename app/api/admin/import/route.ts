@@ -4,10 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { parseImportCsv, validateImportRow, importTemplateCsv, HEADER_LABELS } from "@/lib/import";
 import { computeQualityScore } from "@/lib/validation";
 import { guardMutation } from "@/lib/request-guard";
+import { securityLogCsvImport, securityLogCsvImportRejected } from "@/lib/security-log";
 
 const REQUIRED_HEADERS = ["Subject Code", "Board Code", "Grade", "Book Title", "Chapter", "Topic", "Question", "Option A", "Option B", "Option C", "Option D", "Correct"];
 
-const MAX_CSV_BYTES = 5 * 1024 * 1024; // 5 MB uploaded payload
+const MAX_CSV_BYTES = 5 * 1024 * 1024;
 const MAX_CSV_ROWS = 5000; // data rows (after the header)
 
 export async function POST(request: Request) {
@@ -22,22 +23,48 @@ export async function POST(request: Request) {
     );
   }
 
-  const contentLength = Number(request.headers.get("content-length") ?? 0);
-  if (contentLength > MAX_CSV_BYTES) {
-    return NextResponse.json({ error: `CSV upload exceeds the ${Math.round(MAX_CSV_BYTES / 1024 / 1024)} MB limit.` }, { status: 413 });
-  }
-
+  // --- Step 2: Read payload and calculate actual byte length ---
   let csvText: string | null = null;
   const contentType = request.headers.get("content-type") ?? "";
+  const contentLength = Number(request.headers.get("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > MAX_CSV_BYTES) {
+    securityLogCsvImportRejected(admin.userId, "payload_too_large");
+    return NextResponse.json(
+      { error: `CSV upload exceeds the ${MAX_CSV_BYTES / 1024 / 1024} MB limit.` },
+      { status: 413 },
+    );
+  }
+
   if (contentType.includes("multipart/form-data")) {
     const form = await request.formData();
-    const file = form.get("file");
-    if (file && typeof (file as File).text === "function") {
-      csvText = await (file as File).text();
+    const file = form.get("file") as File | null;
+    // For File uploads: check size before reading text
+    if (file && typeof file.text === "function") {
+      if (file.size > MAX_CSV_BYTES) {
+        securityLogCsvImportRejected(admin.userId, "payload_too_large");
+        return NextResponse.json(
+          { error: `File upload exceeds the ${MAX_CSV_BYTES / 1024 / 1024} MB limit.` },
+          { status: 413 },
+        );
+      }
+      csvText = await file.text();
     }
+    // Fall through: no size info or file too small; read and check actual bytes
   } else {
     const body = await request.json().catch(() => null);
-    csvText = body?.text ?? null;
+    csvText = typeof body?.text === "string" ? body.text : null;
+  }
+
+  // --- Step 3: Calculate actual UTF-8 byte length from parsed text ---
+  if (csvText) {
+    const actualBytes = new TextEncoder().encode(csvText).length;
+    if (actualBytes > MAX_CSV_BYTES) {
+      securityLogCsvImportRejected(admin.userId, "payload_too_large");
+      return NextResponse.json(
+        { error: `CSV upload exceeds the ${MAX_CSV_BYTES / 1024 / 1024} MB limit.` },
+        { status: 413 },
+      );
+    }
   }
 
   if (!csvText || csvText.trim().length === 0) {
@@ -58,6 +85,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "CSV must have a header row and at least one data row." }, { status: 400 });
   }
   if (lines.length - 1 > MAX_CSV_ROWS) {
+    securityLogCsvImportRejected(admin.userId, "row_limit_exceeded");
     return NextResponse.json(
       { error: `CSV exceeds the ${MAX_CSV_ROWS}-row import limit (got ${lines.length - 1} data rows).` },
       { status: 413 },
@@ -180,6 +208,8 @@ export async function POST(request: Request) {
   }
 
   const failedCount = results.filter((r) => r.errors.length > 0).length;
+
+  securityLogCsvImport({ actorId: admin.userId, rowsProcessed: lines.length - 1, rowsImported: imported, rowsFailed: failedCount });
 
   return NextResponse.json({
     total: lines.length - 1,

@@ -3,6 +3,7 @@ import { requireApiUser } from "@/lib/api-auth";
 import { onboardingSchema } from "@/lib/schemas";
 import { prisma } from "@/lib/prisma";
 import { guardMutation } from "@/lib/request-guard";
+import { securityLogProfileMutation } from "@/lib/security-log";
 
 export async function POST(request: Request) {
   const apiUser = await requireApiUser();
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
   const { classId, boardId, goal, subjectIds } = parsed.data;
   const preparationMode = goal === "MDCAT" ? "MDCAT" : goal === "BOARD_EXAM" ? "BOARD" : "BOTH";
 
-  await prisma.$transaction(async (tx) => {
+  const profileId = await prisma.$transaction(async (tx) => {
     const profile = await tx.studentProfile.upsert({
       where: { userId: apiUser.userId },
       update: { classId, boardId, goal, preparationMode },
@@ -36,7 +37,9 @@ export async function POST(request: Request) {
     await tx.studentSubject.createMany({
       data: subjectIds.map((subjectId) => ({ profileId: profile.id, subjectId })),
     });
+    return profile.id;
   });
+  securityLogProfileMutation("onboard", apiUser.userId, profileId);
 
   return NextResponse.json({ ok: true });
 }

@@ -5,6 +5,7 @@ import { requireApiUser } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { resolveTextbookFile } from "@/lib/textbook-storage";
 import { guardRead } from "@/lib/request-guard";
+import { securityLogTextbookSuspicious } from "@/lib/security-log";
 
 export const runtime = "nodejs";
 
@@ -25,7 +26,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ book
   const book = await prisma.book.findFirst({ where: { id: bookId, status: "PUBLISHED" }, select: { fileUrl: true, title: true } });
   if (!book?.fileUrl) return Response.json({ error: "Textbook file unavailable" }, { status: 404 });
   const filePath = resolveTextbookFile(book.fileUrl);
-  if (!filePath) return Response.json({ error: "Invalid textbook file" }, { status: 400 });
+  if (!filePath) {
+    securityLogTextbookSuspicious("invalid_file_key", bookId);
+    return Response.json({ error: "Invalid textbook file" }, { status: 400 });
+  }
 
   let size: number;
   try {
@@ -53,10 +57,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ book
   }
 
   const match = /^bytes=(\d*)-(\d*)$/.exec(range);
-  if (!match) return new Response(null, { status: 416, headers: { "Content-Range": `bytes */${size}` } });
+  if (!match) {
+    securityLogTextbookSuspicious("invalid_range", bookId);
+    return new Response(null, { status: 416, headers: { "Content-Range": `bytes */${size}` } });
+  }
   const start = match[1] ? Number(match[1]) : 0;
   const end = match[2] ? Math.min(Number(match[2]), size - 1) : size - 1;
   if (start > end || start >= size) {
+    securityLogTextbookSuspicious("invalid_range", bookId);
     return new Response(null, { status: 416, headers: { "Content-Range": `bytes */${size}` } });
   }
 

@@ -3,6 +3,7 @@ import { requireApiAdmin } from "@/lib/api-auth";
 import { createChapterSchema } from "@/lib/schemas";
 import { prisma } from "@/lib/prisma";
 import { guardMutation } from "@/lib/request-guard";
+import { securityLogAdminMutation } from "@/lib/security-log";
 
 export async function GET(request: Request) {
   const admin = await requireApiAdmin();
@@ -49,5 +50,6 @@ export async function POST(request: Request) {
   }
 
   const chapter = await prisma.chapter.create({ data: parsed.data });
+  securityLogAdminMutation({ action: "create", actorId: admin.userId, resourceType: "chapter", resourceId: chapter.id });
   return NextResponse.json({ id: chapter.id }, { status: 201 });
 }
