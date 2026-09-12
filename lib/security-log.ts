@@ -99,3 +99,7 @@ export function securityLogTestMutation(action: string, actorId: string, resourc
 export function securityLogProfileMutation(action: string, actorId: string, resourceId: string): void {
   securityLog("profile.mutation_succeeded", { action, actorId, resourceId }, "info");
 }
+
+export function securityLogCredentialEvent(action: "password_reset" | "password_change" | "email_change_requested", actorId: string): void {
+  securityLog("account.credential_event", { action, actorId }, "info");
+}

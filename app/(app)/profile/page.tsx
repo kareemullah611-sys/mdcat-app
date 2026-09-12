@@ -47,12 +47,18 @@ export default async function ProfilePage() {
           </div>
         </dl>
 
-        <div className="mt-6">
+        <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/onboarding"
             className="inline-flex h-10 items-center rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-800 hover:bg-slate-100"
           >
             Edit settings
+          </Link>
+          <Link
+            href="/profile/security"
+            className="inline-flex h-10 items-center rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-800 hover:bg-slate-100"
+          >
+            Account security
           </Link>
         </div>
       </Card>

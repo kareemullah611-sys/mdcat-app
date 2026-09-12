@@ -60,6 +60,12 @@ export default function LoginPage() {
           />
         </Field>
 
+        <div className="text-right">
+          <Link href="/forgot-password" className="text-sm font-medium text-slate-700 underline">
+            Forgot password?
+          </Link>
+        </div>
+
         {error ? (
           <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}

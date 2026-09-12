@@ -3,6 +3,7 @@ import {
   securityLog, securityLogAdminMutation, securityLogAuthFailure,
   securityLogCsvImport, securityLogCsvImportRejected, securityLogError, securityLogOriginMismatch,
   securityLogProfileMutation, securityLogRateLimited, securityLogTestMutation,
+  securityLogCredentialEvent,
   securityLogTextbookSuspicious,
 } from "@/lib/security-log";
 
@@ -97,5 +98,10 @@ describe("fixed security event helpers", () => {
     expect(log).toHaveBeenCalledTimes(2);
     expect(JSON.parse(log.mock.calls[0]?.[0] as string).event).toBe("test.mutation_succeeded");
     expect(JSON.parse(log.mock.calls[1]?.[0] as string).event).toBe("profile.mutation_succeeded");
+  });
+
+  it("logs credential events without an email or password", () => {
+    const { entry } = capture("log", () => securityLogCredentialEvent("password_change", "actor-1"));
+    expect(entry).toMatchObject({ event: "account.credential_event", action: "password_change", actorId: "actor-1" });
   });
 });

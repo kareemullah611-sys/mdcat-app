@@ -1,5 +1,6 @@
 export const RATE_LIMITS = {
   AUTH: { windowMs: 60_000, max: 20 },
+  ACCOUNT: { windowMs: 15 * 60_000, max: 10 },
   ONBOARDING: { windowMs: 60_000, max: 10 },
   TEST_CREATE: { windowMs: 60_000, max: 10 },
   ANSWER: { windowMs: 60_000, max: 120 },

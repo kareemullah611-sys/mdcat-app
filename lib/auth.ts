@@ -5,6 +5,8 @@ import { twoFactor } from "better-auth/plugins";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/constants";
 import { trustedOrigins } from "@/lib/origin";
+import { queueAuthEmail } from "@/lib/auth-email";
+import { securityLogCredentialEvent } from "@/lib/security-log";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
@@ -17,11 +19,59 @@ export const auth = betterAuth({
       // otherwise better-auth's input transform silently drops undeclared fields.
       roleId: { type: "string", required: false },
     },
+    changeEmail: {
+      enabled: true,
+      updateEmailWithoutVerification: false,
+      sendChangeEmailConfirmation: async ({ user, newEmail, url }) => {
+        queueAuthEmail({
+          to: user.email,
+          subject: "Approve your MDCAT Pakistan email change",
+          heading: "Approve email change",
+          message: `A request was made to change your sign-in email to ${newEmail}. Approve it below. The new address must then be verified.`,
+          actionLabel: "Approve email change",
+          actionUrl: url,
+        }, "account.email_change_confirmation_failed");
+      },
+    },
+  },
+  emailVerification: {
+    expiresIn: 30 * 60,
+    sendVerificationEmail: async ({ user, url }) => {
+      queueAuthEmail({
+        to: user.email,
+        subject: "Verify your MDCAT Pakistan email",
+        heading: "Verify your email address",
+        message: "Confirm that this email address belongs to you. This link expires in 30 minutes.",
+        actionLabel: "Verify email",
+        actionUrl: url,
+      }, "account.email_verification_failed");
+    },
   },
   emailAndPassword: {
     enabled: true,
-    minPasswordLength: 8,
+    minPasswordLength: 10,
     maxPasswordLength: 128,
+    resetPasswordTokenExpiresIn: 30 * 60,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      queueAuthEmail({
+        to: user.email,
+        subject: "Reset your MDCAT Pakistan password",
+        heading: "Reset your password",
+        message: "Use the secure link below to choose a new password. It expires in 30 minutes and can only be used once.",
+        actionLabel: "Reset password",
+        actionUrl: url,
+      }, "account.password_reset_email_failed");
+    },
+    onPasswordReset: async ({ user }) => {
+      securityLogCredentialEvent("password_reset", user.id);
+      queueAuthEmail({
+        to: user.email,
+        subject: "Your MDCAT Pakistan password was changed",
+        heading: "Password changed",
+        message: "Your password was reset and other signed-in sessions were revoked. If this was not you, contact support immediately.",
+      }, "account.password_reset_notice_failed");
+    },
   },
   // Exact origins only (no wildcards, no dead domains, localhost only in dev).
   trustedOrigins: trustedOrigins(),
@@ -33,6 +83,12 @@ export const auth = betterAuth({
   rateLimit: {
     window: 60,
     max: 20,
+    customRules: {
+      "/request-password-reset": { window: 15 * 60, max: 5 },
+      "/reset-password": { window: 15 * 60, max: 10 },
+      "/change-password": { window: 15 * 60, max: 10 },
+      "/change-email": { window: 15 * 60, max: 5 },
+    },
   },
   advanced: {
     // Railway terminates TLS at its edge and supplies the connecting client in
