@@ -44,6 +44,11 @@ export async function POST(request: Request, context: RouteContext) {
   const result = await submitExam(testId, session.user.id, parsed.data.answers);
 
   if (result.error) {
+    // A weak connection can lose the successful response after the database
+    // commit. Treat a retry as success so exam submission is idempotent.
+    if (result.error === "ALREADY_SUBMITTED") {
+      return NextResponse.json({ ok: true, testId, alreadySubmitted: true });
+    }
     const status =
       result.error === "NOT_FOUND" ? 404 : result.error === "FORBIDDEN" ? 403 : 409;
     return NextResponse.json({ error: result.error }, { status });

@@ -78,18 +78,37 @@ export function ExamRunner({
       selectedOptionId: answers[q.questionId] ?? null,
       timeSpentSeconds: Math.max(0, Math.round(timeSpentRef.current[q.questionId] ?? 0)),
     }));
-    const res = await fetch(`/api/tests/${testId}/submit`, {
+    const request = () => fetch(`/api/tests/${testId}/submit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ answers: payload }),
+      keepalive: true,
     });
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      setSubmissionError(data?.error ?? "Could not submit exam. Please try again.");
+
+    try {
+      let res: Response;
+      try {
+        res = await request();
+      } catch {
+        // The first request may already have committed. The endpoint treats an
+        // already-completed exam as success, making this retry safe.
+        res = await request();
+      }
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setSubmissionError(data?.error ?? "Could not submit exam. Please try again.");
+        setSubmitting(false);
+        return;
+      }
+      router.push(`/tests/${testId}/result`);
+    } catch {
+      setSubmissionError(
+        navigator.onLine
+          ? "The response was interrupted. Your answers are still here—tap Submit to safely try again."
+          : "You are offline. Reconnect, then tap Submit; your answers are still here.",
+      );
       setSubmitting(false);
-      return;
     }
-    router.push(`/tests/${testId}/result`);
   }
 
   useEffect(() => {
