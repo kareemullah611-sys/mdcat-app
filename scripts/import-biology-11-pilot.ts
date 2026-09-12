@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { biology11Pilot } from "./data/biology-11-pilot";
+import { biology11Pilot } from "../lib/data/biology-11-pilot";
 import { MCQ_PROMPT_VERSIONS, validateGroundedPilot, validatePilotBalance } from "../lib/mcq-pipeline";
 
 const prisma = new PrismaClient();

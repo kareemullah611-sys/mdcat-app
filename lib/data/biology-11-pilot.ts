@@ -1,4 +1,4 @@
-import type { GroundedMcq } from "../../lib/mcq-pipeline";
+import type { GroundedMcq } from "../mcq-pipeline";
 
 type Domain = "cell" | "biomolecules" | "enzymes" | "bioenergetics" | "viruses";
 type Card = {

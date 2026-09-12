@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { validateGroundedPilot, validatePilotBalance, type GroundedMcq } from "@/lib/mcq-pipeline";
-import { biology11Pilot } from "../../scripts/data/biology-11-pilot";
+import { biology11Pilot } from "@/lib/data/biology-11-pilot";
 
 const valid: GroundedMcq = {
   generationKey: "pilot-1",
