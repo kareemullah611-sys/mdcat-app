@@ -23,7 +23,11 @@ export default function LoginPage() {
     }
     // The Better Auth two-factor client redirects admins that still need to
     // verify. Do not overwrite that navigation with the post-login destination.
-    if (res.data?.twoFactorRedirect) return;
+    if (
+      res.data &&
+      "twoFactorRedirect" in res.data &&
+      res.data.twoFactorRedirect === true
+    ) return;
 
     // Authentication changes the session cookie and therefore the server-rendered
     // route tree. Start a fresh document request so browsers do not try to reuse
