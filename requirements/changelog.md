@@ -4,6 +4,12 @@ Format: `YYYY-MM-DD — {ADDED | MODIFIED | REPLACED | REMOVED | ARCHITECTURAL}`
 
 ---
 
+## 2026-09-13 — Grounded Biology MCQ pilot
+
+- **ADDED** — Versioned PMDC syllabus/outcome model, question generation keys, prompt-version provenance, and cross-board source-page mappings.
+- **ADDED** — Grounded Biology Grade XI pilot pipeline: 100 FBISE/Balochistan MCQs, exactly 15 easy / 70 medium / 15 hard, with deterministic validation, syllabus mapping, evidence metadata, duplicate protection, and idempotent import.
+- **CORRECTED** — Biology Grade XI chapter names and PDF page ranges for FBISE and Balochistan imports so reader navigation and MCQ provenance match the uploaded books.
+
 ## 2026-09-05 — Initial baseline
 
 - **ADDED** — Full 106-section product specification adopted as the baseline (see `product-spec.md`).

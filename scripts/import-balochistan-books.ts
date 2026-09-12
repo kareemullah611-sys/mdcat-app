@@ -5,7 +5,7 @@ import { resolveTextbookFile } from "../lib/textbook-storage";
 const prisma = new PrismaClient();
 const sourceLabel = "Balochistan Textbook Board, Quetta. Local educational copy; redistribution rights must be verified before production publication.";
 const books = [
-  { grade: 11, subject: "BIOLOGY", file: "balochistan-biology-11.pdf", title: "Biology Grade XI", chapters: ["Introduction to Biology", "Biological Molecules", "Enzymes", "The Cell", "Variety of Life", "Kingdom Prokaryotae", "Kingdom Protista and Fungi", "Diversity Among Plants", "Diversity Among Animals", "Functional Biology", "Bioenergetics", "Nutrition", "Gaseous Exchange", "Transport"] },
+  { grade: 11, subject: "BIOLOGY", file: "balochistan-biology-11.pdf", title: "Biology Grade XI", chapters: ["Cell Structure and Function", "Stem Cell and Cell Cycle", "Biological Molecules", "Enzymes", "Bioenergetics", "Acellular Life", "Prokaryotes", "Protists and Fungi", "Diversity Among Plants", "Form and Functions in Plants", "Biodiversity of Animals", "Chromosome and DNA", "Evolution", "Ecology"], chapterPages: [[5, 37], [38, 50], [51, 90], [91, 107], [108, 138], [139, 162], [163, 192], [193, 219], [220, 239], [240, 283], [284, 317], [318, 355], [356, 370], [371, 406]] },
   { grade: 11, subject: "CHEMISTRY", file: "balochistan-chemistry-11.pdf", title: "Chemistry Grade XI", chapters: ["Stoichiometry", "Atomic Structure", "Theories of Covalent Bonding and Shapes of Molecules", "State of Matter I: Gases", "State of Matter II: Liquids", "State of Matter III: Solids", "Chemical Equilibrium", "Acids, Bases and Salts", "Chemical Kinetics", "Solutions", "Thermochemistry", "Electrochemistry", "Reaction Kinetics", "Fundamentals of Organic Chemistry"] },
   { grade: 11, subject: "PHYSICS", file: "balochistan-physics-11.pdf", title: "Physics Grade XI", chapters: ["Measurements", "Vectors and Equilibrium", "Forces and Motion", "Work and Energy", "Rotational and Circular Motion", "Fluid Dynamics", "Oscillations", "Waves", "Physical Optics", "Thermodynamics"] },
   { grade: 12, subject: "BIOLOGY", file: "balochistan-biology-12.pdf", title: "Biology Grade XII", chapters: ["Respiration", "Homeostasis", "Support and Movement", "Nervous Coordination", "Chemical Coordination", "Behavior", "Reproduction", "Development and Aging", "Inheritance", "Chromosome and DNA", "Evolution", "Man and Environment", "Biotechnology", "Immunity and Vulnerability"], start: 14 },
@@ -35,7 +35,9 @@ async function main() {
     for (let i = 0; i < item.chapters.length; i++) {
       const number = (item.start ?? 1) + i;
       const existing = await prisma.chapter.findFirst({ where: { bookId: book.id, number } });
-      const chapter = existing ? await prisma.chapter.update({ where: { id: existing.id }, data: { title: item.chapters[i], status: "PUBLISHED" } }) : await prisma.chapter.create({ data: { bookId: book.id, number, title: item.chapters[i], status: "PUBLISHED" } });
+      const pages = (item as typeof item & { chapterPages?: number[][] }).chapterPages?.[i];
+      const chapterData = { title: item.chapters[i], status: "PUBLISHED", pageStart: pages?.[0], pageEnd: pages?.[1] };
+      const chapter = existing ? await prisma.chapter.update({ where: { id: existing.id }, data: chapterData }) : await prisma.chapter.create({ data: { bookId: book.id, number, ...chapterData } });
       const topic = await prisma.topic.findFirst({ where: { chapterId: chapter.id, number: 1 } });
       if (!topic) await prisma.topic.create({ data: { chapterId: chapter.id, number: 1, order: 1, title: "Chapter textbook", content: "Read this chapter in the original textbook reader. Structured topic extraction and academic review are pending." } });
     }

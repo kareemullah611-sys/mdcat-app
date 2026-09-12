@@ -171,6 +171,7 @@ model Subject {
   questions        Question[]
   studentSubjects  StudentSubject[]
   questionMappings QuestionMapping[]
+  syllabusOutcomes SyllabusOutcome[]
 
   @@index([code])
 }
@@ -213,6 +214,8 @@ model Chapter {
   number    Int?
   title     String
   summary   String?  @db.Text
+  pageStart Int?
+  pageEnd   Int?
   status    String   @default("DRAFT")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -246,30 +249,33 @@ model Topic {
 // ---------------------------------------------------------------------------
 
 model Question {
-  id                  String   @id @default(cuid())
-  questionText        String   @db.Text
-  subjectId           String
-  boardId             String?
-  classId             String?
-  chapterId           String?
-  topicId             String?
+  id                      String   @id @default(cuid())
+  generationKey           String?  @unique
+  questionText            String   @db.Text
+  subjectId               String
+  boardId                 String?
+  classId                 String?
+  chapterId               String?
+  topicId                 String?
   // CONCEPTUAL | FACTUAL | NUMERICAL | APPLICATION | STATEMENT_BASED |
   // COMPARISON | DIAGRAM | REASONING | SEQUENCE | FORMULA | MDCAT_STYLE (§16)
-  questionType        String   @default("CONCEPTUAL")
-  difficulty          String   @default("MEDIUM") // EASY | MEDIUM | HARD
-  explanation         String?  @db.Text
+  questionType            String   @default("CONCEPTUAL")
+  difficulty              String   @default("MEDIUM") // EASY | MEDIUM | HARD
+  explanation             String?  @db.Text
   // TEXTBOOK | PAST_MDCAT | AI_GENERATED | ADMIN_CREATED (§17)
-  sourceType          String   @default("TEXTBOOK")
-  sourceReference     String? // e.g. "Chapter 5, page 34"
-  mdcatRelevanceScore Int      @default(50)
-  qualityScore        Int      @default(50)
-  status              String   @default("DRAFT") // DRAFT|VALIDATED|PUBLISHED|DISABLED|ARCHIVED (§25, §98)
+  sourceType              String   @default("TEXTBOOK")
+  sourceReference         String? // e.g. "Chapter 5, page 34"
+  mdcatRelevanceScore     Int      @default(50)
+  qualityScore            Int      @default(50)
+  status                  String   @default("DRAFT") // DRAFT|VALIDATED|PUBLISHED|DISABLED|ARCHIVED (§25, §98)
   // §26 duplicate / problematic markers
-  duplicateOfId       String? // id of the question this one duplicates
-  issueReason         String?  @db.Text // why this question was flagged problematic
-  createdById         String?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  duplicateOfId           String? // id of the question this one duplicates
+  issueReason             String?  @db.Text // why this question was flagged problematic
+  createdById             String?
+  generationPromptVersion String?
+  validationPromptVersion String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
   subject       Subject           @relation(fields: [subjectId], references: [id])
   board         Board?            @relation(fields: [boardId], references: [id])
@@ -295,6 +301,38 @@ model Question {
   @@index([duplicateOfId])
 }
 
+model SyllabusVersion {
+  id          String            @id @default(cuid())
+  code        String            @unique
+  name        String
+  authority   String
+  year        Int
+  status      String            @default("ACTIVE")
+  sourceUrl   String
+  publishedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  outcomes    SyllabusOutcome[]
+
+  @@index([authority, year, status])
+}
+
+model SyllabusOutcome {
+  id                String            @id @default(cuid())
+  syllabusVersionId String
+  subjectId         String
+  code              String
+  unit              String
+  topic             String
+  statement         String            @db.Text
+  syllabusVersion   SyllabusVersion   @relation(fields: [syllabusVersionId], references: [id], onDelete: Cascade)
+  subject           Subject           @relation(fields: [subjectId], references: [id])
+  mappings          QuestionMapping[]
+
+  @@unique([syllabusVersionId, code])
+  @@index([subjectId])
+}
+
 model QuestionOption {
   id         String   @id @default(cuid())
   questionId String
@@ -309,23 +347,28 @@ model QuestionOption {
 // Cross-board mapping — one question can map to many boards/chapters/concepts
 // while remaining a single row (§72-73).
 model QuestionMapping {
-  id              String       @id @default(cuid())
-  questionId      String
-  subjectId       String?
-  boardId         String?
-  chapterId       String?
-  topicId         String?
-  concept         String?
-  learningOutcome String?      @db.Text
-  schoolClassId   String?
-  board           Board?       @relation(fields: [boardId], references: [id])
-  class           SchoolClass? @relation(fields: [schoolClassId], references: [id])
-  question        Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  subject         Subject?     @relation(fields: [subjectId], references: [id])
+  id                String           @id @default(cuid())
+  questionId        String
+  subjectId         String?
+  boardId           String?
+  chapterId         String?
+  topicId           String?
+  concept           String?
+  learningOutcome   String?          @db.Text
+  syllabusOutcomeId String?
+  sourcePageStart   Int?
+  sourcePageEnd     Int?
+  schoolClassId     String?
+  board             Board?           @relation(fields: [boardId], references: [id])
+  class             SchoolClass?     @relation(fields: [schoolClassId], references: [id])
+  question          Question         @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  subject           Subject?         @relation(fields: [subjectId], references: [id])
+  syllabusOutcome   SyllabusOutcome? @relation(fields: [syllabusOutcomeId], references: [id])
 
   @@index([questionId])
   @@index([boardId])
   @@index([subjectId])
+  @@index([syllabusOutcomeId])
 }
 
 // ---------------------------------------------------------------------------

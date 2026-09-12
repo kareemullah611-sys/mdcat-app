@@ -53,3 +53,10 @@
 - **Context:** A student's exam result must stay reproducible even if the bank changes (§75, §106.9).
 - **Decision:** `Test` keeps the filter snapshot (arrays of ids) and `TestQuestion` stores the presented option order per question. Submissions create durable `AnswerHistory` rows.
 - **Consequence:** Historical results survive question edits/removal; later phases (mistakes, mastery, tutor) read `AnswerHistory` rather than live question rows.
+
+## ADR-008 — Versioned PMDC syllabus and grounded MCQ provenance
+
+- **Status:** Accepted (2026-09-13)
+- **Context:** The MCQ pipeline must validate against a named current syllabus and retain cross-board textbook support without duplicating a question.
+- **Decision:** Store PMDC curriculum releases in `SyllabusVersion`/`SyllabusOutcome`; map every generated question to an outcome and one or more board chapters through `QuestionMapping`, including source page ranges. Use stable `generationKey` values for idempotent imports and record generation/validation prompt versions. The Biology XI pilot uses the PMDC final MDCAT 2025 curriculum because it is the latest final curriculum published by PMDC at implementation time.
+- **Consequence:** A newer PMDC curriculum can be seeded and activated without rewriting historical mappings. Generated content is reproducible, auditable and safe to re-import.
