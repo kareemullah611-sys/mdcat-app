@@ -12,14 +12,25 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const normalizedName = name.trim();
+    const normalizedEmail = email.trim();
+    if (!normalizedName || !normalizedEmail || !phoneNumber.trim() || !password || !confirmPassword) {
+      setError("All fields are required.");
+      return;
+    }
     if (password.length < 10) {
       setError("Password must be at least 10 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
       return;
     }
     const normalizedPhone = normalizePakistanMobile(phoneNumber);
@@ -29,7 +40,7 @@ export default function SignupPage() {
     }
     setError(null);
     setLoading(true);
-    const res = await signUp.email({ name, email, password, phoneNumber: normalizedPhone });
+    const res = await signUp.email({ name: normalizedName, email: normalizedEmail, password, phoneNumber: normalizedPhone });
     if (res.error) {
       setError(res.error.message ?? "Unable to create account.");
       setLoading(false);
@@ -49,6 +60,7 @@ export default function SignupPage() {
       </p>
 
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        <p className="text-xs text-slate-500">All fields are required.</p>
         <Field label="Full name">
           <Input
             required
@@ -87,6 +99,17 @@ export default function SignupPage() {
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+          />
+        </Field>
+        <Field label="Confirm password">
+          <Input
+            type="password"
+            required
+            minLength={10}
+            maxLength={128}
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
           />
         </Field>
 
