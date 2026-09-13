@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { validateGroundedPilot, validatePilotBalance, type GroundedMcq } from "@/lib/mcq-pipeline";
 import { biology11Pilot } from "@/lib/data/biology-11-pilot";
+import { chemistryPilot } from "@/lib/data/chemistry-pilot";
+import { physicsPilot } from "@/lib/data/physics-pilot";
 
 const valid: GroundedMcq = {
   generationKey: "pilot-1",
@@ -32,5 +34,12 @@ describe("grounded MCQ pipeline", () => {
     expect(biology11Pilot).toHaveLength(100);
     expect(validateGroundedPilot(biology11Pilot)).toEqual([]);
     expect(validatePilotBalance(biology11Pilot)).toEqual([]);
+  });
+  it.each([["Chemistry", chemistryPilot], ["Physics", physicsPilot]])("accepts the complete 100-question %s bank", (_label, questions) => {
+    expect(questions).toHaveLength(100);
+    expect(validateGroundedPilot(questions)).toEqual([]);
+    expect(validatePilotBalance(questions)).toEqual([]);
+    expect(new Set(questions.flatMap((question) => question.sources.map((source) => source.boardCode)))).toEqual(new Set(["FBISE", "BALOCHISTAN"]));
+    expect(questions.every((question) => question.sources.every((source) => source.grade === 11 || source.grade === 12))).toBe(true);
   });
 });

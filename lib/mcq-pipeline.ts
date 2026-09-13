@@ -20,8 +20,9 @@ export type GroundedMcq = {
   concept: string;
   sources: Array<{
     boardCode: "FBISE" | "BALOCHISTAN";
+    grade?: 11 | 12;
     chapterNumber: number;
-    pageStart: number;
+    pageStart?: number;
     pageEnd?: number;
     evidence: string;
   }>;
@@ -63,12 +64,14 @@ export function validateGroundedPilot(
     if (item.correctIndex < 0 || item.correctIndex > 3) add("BAD_ANSWER", "Correct option index must be 0-3.");
     if (new Set(item.options.map(normalizeText)).size !== 4) add("DUPLICATE_OPTION", "Options must be distinct.");
     if (!item.explanation.trim()) add("NO_EXPLANATION", "Explanation is required.");
-    if (!/^BIO-\d+\.\d+$/.test(item.outcomeCode)) add("BAD_OUTCOME", "A versioned Biology outcome is required.");
+    if (!/^(BIO|CHEM|PHY)-\d+\.\d+$/.test(item.outcomeCode)) add("BAD_OUTCOME", "A versioned MDCAT subject outcome is required.");
     if (!ALLOWED_TYPES.has(item.questionType)) add("BAD_TYPE", "Question type is not permitted.");
     if (item.mdcatRelevanceScore < 0 || item.mdcatRelevanceScore > 100) add("BAD_RELEVANCE", "Relevance must be 0-100.");
     if (item.sources.length === 0) add("NO_SOURCE", "At least one textbook source is required.");
     for (const source of item.sources) {
-      if (source.pageStart < 1 || (source.pageEnd ?? source.pageStart) < source.pageStart) add("BAD_PAGE", "Invalid source page range.");
+      if (source.grade !== undefined && source.grade !== 11 && source.grade !== 12) add("BAD_GRADE", "Source grade must be 11 or 12.");
+      if (source.pageStart !== undefined && (source.pageStart < 1 || (source.pageEnd ?? source.pageStart) < source.pageStart)) add("BAD_PAGE", "Invalid source page range.");
+      if (source.pageStart === undefined && source.pageEnd !== undefined) add("BAD_PAGE", "A page end requires a page start.");
       if (source.evidence.trim().length < 12) add("WEAK_EVIDENCE", "Source evidence is too short.");
     }
     const normalized = normalizeText(item.questionText);
