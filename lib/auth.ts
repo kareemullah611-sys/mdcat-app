@@ -1,7 +1,8 @@
 import { betterAuth } from "better-auth";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
-import { twoFactor } from "better-auth/plugins";
+import { twoFactor, username } from "better-auth/plugins";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/constants";
 import { trustedOrigins } from "@/lib/origin";
@@ -9,6 +10,7 @@ import { queueAuthEmail } from "@/lib/auth-email";
 import { securityLogCredentialEvent } from "@/lib/security-log";
 import { isPakistanMobile, normalizePakistanMobile } from "@/lib/pakistan-phone";
 import { z } from "zod";
+import { isValidUsername, normalizeUsername, usernameValidationError } from "@/lib/username";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
@@ -120,7 +122,23 @@ export const auth = betterAuth({
       },
     },
   },
+  hooks: {
+    before: createAuthMiddleware(async (context) => {
+      if (context.path !== "/sign-up/email") return;
+      const message = usernameValidationError(context.body?.username);
+      if (message) throw new APIError("BAD_REQUEST", { message, code: "INVALID_USERNAME" });
+    }),
+  },
   plugins: [
+    username({
+      displayUsername: false,
+      minUsernameLength: 4,
+      maxUsernameLength: 20,
+      usernameNormalization: normalizeUsername,
+      usernameValidator: isValidUsername,
+      validationOrder: { username: "post-normalization" },
+      immutableUsername: true,
+    }),
     twoFactor({
       issuer: "MDCAT Pakistan",
       twoFactorCookieMaxAge: 10 * 60,

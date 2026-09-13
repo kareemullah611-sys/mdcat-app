@@ -76,16 +76,19 @@ export function Select(props: React.ComponentProps<"select">) {
 export function Field({
   label,
   hint,
+  error,
   children,
 }: {
   label: string;
   hint?: string;
+  error?: string | null;
   children: React.ReactNode;
 }) {
   return (
     <label className="block space-y-1.5">
       <span className="block text-sm font-medium text-slate-700">{label}</span>
       {children}
+      {error ? <span role="alert" className="block text-xs text-red-600">{error}</span> : null}
       {hint ? <span className="block text-xs text-slate-500">{hint}</span> : null}
     </label>
   );
