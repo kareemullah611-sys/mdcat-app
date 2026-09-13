@@ -184,7 +184,7 @@ export default function SignupPage() {
             {usernameStatus === "error" ? <span className="text-slate-500">Unable to check username right now. You can still try submitting the form.</span> : null}
           </span>
         </Field>
-        <Field label="Mobile number" hint="Pakistan format: 03XX XXXXXXX. SMS verification will be added before the number is used as a security factor.">
+        <Field label="Mobile number">
           <Input
             type="tel"
             required
