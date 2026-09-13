@@ -66,7 +66,7 @@ export default function SignupPage() {
             onChange={(e) => setEmail(e.target.value)}
           />
         </Field>
-        <Field label="Pakistan mobile number" hint="Format: 03XX XXXXXXX. SMS verification will be added before the number is used as a security factor.">
+        <Field label="Mobile number" hint="Pakistan format: 03XX XXXXXXX. SMS verification will be added before the number is used as a security factor.">
           <Input
             type="tel"
             required
