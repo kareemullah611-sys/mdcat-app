@@ -4,6 +4,15 @@ Format: `YYYY-MM-DD — {ADDED | MODIFIED | REPLACED | REMOVED | ARCHITECTURAL}`
 
 ---
 
+## 2026-09-14 — PMDC MDCAT 2025 syllabus completed for Biology
+
+- **ADDED** — `lib/data/mdcat-2025-curriculum.ts`: the official PM&DC MDCAT 2025 learning outcomes as typed reference data, extracted from the published curriculum PDF (`SOURCE_URL` already on `PMDC_MDCAT_2025_FINAL`). **Biology is now complete** — all 16 units / 69 outcomes, adding the 48 previously missing Grade XII outcomes (Coordination & Control, Evolution, Reproduction, Support & Movement, Inheritance, Circulation, Immunity, Respiration, Digestion, Homeostasis, Biotechnology).
+- **CORRECTED** — The 21 existing Biology outcome statements were paraphrases; they now carry the exact official wording (e.g. `BIO-1.2` is "…cause of viral disease (AIDS)"). No historical student record was affected: all 1,500 bank questions are `VALIDATED` with zero `TestQuestion` / `AnswerHistory` rows, and the Biology bank was re-imported to refresh the denormalized `QuestionMapping.learningOutcome` text.
+- **MODIFIED** — `scripts/seed-mdcat-syllabus-2025.ts` is now a thin, idempotent seeder over the reference module (no academic content in the script). Additive upserts only — **no migration**, existing outcome ids preserved so mappings keep resolving (§106.7).
+- **ADDED** — `lib/__tests__/mdcat-curriculum.test.ts` (13 tests): duplicate-code guard, outcome-code format, per-unit ascending/unique numbering, the exact official Biology inventory (16 units / 69 outcomes, per-unit counts), an upper bound proving the Chemistry/Physics arrays never exceed the official totals, and a check that every outcome used by the bank coverage map exists in the curriculum.
+- **DOCUMENTED** — `requirements/mdcat-2025-outcomes.md`: human review copy of the extraction, the confirmed paper structure (180 MCQs / 3 h / no negative marking; Biology 45 %, Chemistry 25 %, Physics 20 %; **15 % easy / 70 % moderate / 15 % difficult** — identical to the bank's difficulty mix), the proposed Grade XII chapter mapping, and every typo corrected in the published PDF.
+- **OPEN** — Chemistry (95 of 120) and Physics (75 of 100) outcomes still missing from the seed; awaiting the same extract-and-review pass. Board-only chapters with no MDCAT outcome (Ecosystem, Some Major Ecosystems, Man and His Environment, Growth and Development) stay out of the MDCAT bank and belong to MODE A board preparation (§3).
+
 ## 2026-09-13 — Grounded Biology MCQ pilot
 
 - **ADDED** — Versioned PMDC syllabus/outcome model, question generation keys, prompt-version provenance, and cross-board source-page mappings.
