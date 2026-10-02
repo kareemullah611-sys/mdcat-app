@@ -68,7 +68,10 @@ npm run start        # run the production build
 npm run lint         # ESLint
 npm run test         # Vitest unit tests
 npm run db:seed      # reseed reference data + sample questions
-npm run books:import:balochistan # register six PDFs placed in storage/textbooks
+npm run books:import:fbise         # register the six FBISE PDFs placed in storage/textbooks
+npm run books:import:balochistan   # register the six Balochistan PDFs
+npm run syllabus:seed:pmdc-2025    # seed the 289 official PMDC MDCAT 2025 outcomes
+npm run mcq:bank:import            # validate + import the 3,000-question bank (VALIDATED)
 npm run db:migrate   # prisma migrate dev (for schema changes)
 ```
 
@@ -77,13 +80,14 @@ npm run db:migrate   # prisma migrate dev (for schema changes)
 ```
 prisma/            schema.prisma, migrations, seed.ts
 lib/               auth, prisma client, schemas, exam engine, test service, constants
+lib/data/          mdcat-2025-curriculum.ts (official syllabus outcomes), mcq-bank/ (authored MCQs + coverage maps)
 components/        shared UI + practice/exam runners + admin forms + SW registration
 app/(auth)/        login, signup
 app/(app)/         dashboard, onboarding, study, practice, exams, test runners, result, progress, profile
 app/(admin)/       admin dashboard, books → chapters/topics, questions
 app/api/           auth, tests (create/answer/submit), onboarding, admin CRUD
 public/            sw.js, manifest-generated icons (icon.svg source, 192/512/maskable PNGs), apple-touch-icon.png
-requirements/      product-spec.md (source of truth), changelog.md, decisions.md (ADRs)
+requirements/      product-spec.md (source of truth), changelog.md, decisions.md (ADRs), mdcat-2025-outcomes.md (syllabus extraction)
 ```
 
 ## PWA
@@ -98,6 +102,61 @@ The app is installable (V1 is a responsive installable PWA). Web app manifest is
 - MDCAT scoring: +1 correct, −0.25 incorrect, 0 unanswered (see `lib/exam-core.ts`).
 
 **Integrity rule:** correct answer keys never reach the browser. Exams are evaluated server-side at submit (`POST /api/tests/[testId]/submit`); practice sends per-question answers (`POST /api/tests/[testId]/answer`) and receives correctness feedback.
+
+## Loading the MCQ question bank
+
+The repository ships the **authored question content as TypeScript data**, but the
+database rows are not committed — they are generated. A fresh clone therefore has
+**no questions** until you load them. `npm run db:seed` only inserts the 17
+sample/pilot questions from `prisma/seed.ts`.
+
+The bank is **3,000 questions: 500 per subject per class** (Biology, Chemistry,
+Physics × Grade XI, Grade XII), grounded in the PMDC MDCAT 2025 syllabus and
+mapped to the board textbooks in `lib/data/mcq-bank/coverage*.ts`.
+
+```bash
+# 1. Place the 12 textbook PDFs in storage/textbooks/ (gitignored).
+#    FBISE:      fbise-{biology,chemistry,physics}-{11,12}.pdf
+#    Balochistan: balochistan-{biology,chemistry,physics}-{11,12}.pdf
+#    Override the directory with TEXTBOOK_STORAGE_DIR.
+#    NOTE: these are locally-held educational copies. Their redistribution
+#    rights must be verified before any public deployment (spec §84).
+
+# 2. Register the books and their chapters (fails if a PDF is missing)
+npm run books:import:fbise
+npm run books:import:balochistan
+
+# 3. Seed the versioned syllabus — 289 official PMDC MDCAT 2025 outcomes
+npm run syllabus:seed:pmdc-2025
+
+# 4. Validate the authored bank against the database and import it
+npm run mcq:bank:import                    # imports as VALIDATED (admins only)
+npm run mcq:bank:import -- --publish       # or straight to PUBLISHED (student-visible)
+
+# 5. Verify what landed
+npm test
+```
+
+**Useful flags:** `--dry-run` (report only, write nothing), `--subject=BIOLOGY`,
+`--grade=12`, `--batch=chem-xi-b2`. Run the whole bank again any time — imports
+upsert on `generationKey`, so it is idempotent.
+
+**What the importer refuses to do** (it exits non-zero before writing anything):
+a question whose outcome code is outside the official curriculum; a source
+chapter that doesn't exist for that board/class/subject; a page range that
+disagrees with the imported book; a batch that isn't exactly 100 questions at
+15 easy / 70 medium / 15 hard; more than 40 % of a batch's answers in one option
+position; duplicate or near-duplicate stems; and any practical/experimental
+question type.
+
+Statuses follow spec §98: `VALIDATED` questions are visible to admins only,
+`PUBLISHED` questions are drawable by the practice and exam engines
+(`lib/test-service.ts` filters on `status: "PUBLISHED"`). Publishing is reversible
+via the admin override.
+
+To change content, edit the authored parts under `lib/data/mcq-bank/<subject>/`
+against `lib/data/mcq-bank/authoring-guide.md`, then re-run the importer —
+`npm test` enforces the structural rules.
 
 ## Seeding your own questions
 
@@ -132,7 +191,16 @@ Deploy config is committed in `railway.json` (builder `DOCKERFILE` pointing at t
    railway ssh -s web 'cd /app && node_modules/.bin/tsx prisma/seed.ts'
    ```
    - The seed runner (`tsx`) is a devDependency but ships in the deploy image (the repository is uploaded wholesale), so it runs inside the container.
-5. Deploy. The web service will open with `BETTER_AUTH_URL` as its own domain.
+5. Load the academic content, once per environment. **A deployed instance with no imported books and bank shows students an empty question bank** — the content ships as repository data, not database rows:
+   ```bash
+   # the textbook PDFs must be present first (see "Loading the MCQ question bank")
+   railway ssh -s web 'cd /app && node_modules/.bin/tsx scripts/import-fbise-books.ts'
+   railway ssh -s web 'cd /app && node_modules/.bin/tsx scripts/import-balochistan-books.ts'
+   railway ssh -s web 'cd /app && node_modules/.bin/tsx scripts/seed-mdcat-syllabus-2025.ts'
+   railway ssh -s web 'cd /app && node_modules/.bin/tsx scripts/import-mcq-bank.ts --publish'
+   ```
+   All four are idempotent, so re-running is safe after each deploy. In production the PDFs should come from object storage mounted at `TEXTBOOK_STORAGE_DIR` rather than the repository.
+6. Deploy. The web service will open with `BETTER_AUTH_URL` as its own domain.
 
 ### Deprecation note (Config-as-Code → IaC)
 
@@ -147,6 +215,7 @@ Railway deprecates `railway.json`/`.railway.toml` in favour of `.railway/railway
 - [ ] Migrations applied — recommended via dashboard Pre-deploy command (`npx prisma migrate deploy`); see "Migrations" above
 - [ ] `railway.json` committed (build/start/healthcheck are read from it)
 - [ ] Admin created via seed; change the default admin password after first login
+- [ ] Textbook PDFs available at `TEXTBOOK_STORAGE_DIR`, books imported, syllabus seeded, question bank imported (`--publish`) — otherwise students get no questions
 
 ## Notes / gotchas
 
