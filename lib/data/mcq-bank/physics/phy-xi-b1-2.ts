@@ -1,0 +1,473 @@
+import type { BankItem } from "../build";
+
+export const items: BankItem[] = [
+  {
+    key: "vecb-horizontal-component-is-projection",
+    text: "A force of 10 N acts at 30 degrees to the horizontal. Which statement about the horizontal component of this force is correct?",
+    options: [
+      "It equals the full 10 N, because the horizontal axis is fixed in space",
+      "It is larger than 10 N, since projecting on an axis adds to the vector",
+      "It is the projection of the force on the horizontal axis and equals 10 cos 30 = 8.7 N",
+      "It is the component perpendicular to the horizontal axis and equals 10 sin 30 = 5 N",
+    ],
+    correctIndex: 2,
+    explanation:
+      "A component along an axis is a projection of the vector on that axis, so Fx = 10 cos 30 degrees = 8.7 N. The value 10 sin 30 = 5 N belongs to the vertical component, not the horizontal one.",
+    evidence: "The horizontal component of a vector is its projection on the horizontal axis.",
+    questionType: "CONCEPTUAL",
+    difficulty: "EASY",
+    relevance: 97,
+    outcome: "PHY-1.1",
+    concept: "component as projection",
+  },
+  {
+    key: "vecb-equal-opposite-forces-resultant",
+    text: "Two forces act on the same body at the same time, one of 6 N along the +x axis and the other of 6 N along the -x axis. What is their resultant?",
+    options: [
+      "The zero vector, because the two forces are equal in magnitude and opposite in direction",
+      "12 N along the +x axis, because the two magnitudes must be added",
+      "6 N along the +x axis, because the component along +x is the larger one",
+      "Zero, but only in the special case that the body happens to be at rest",
+    ],
+    correctIndex: 0,
+    explanation:
+      "Adding the two forces component-wise gives Rx = 6 - 6 = 0 and Ry = 0, so the resultant is the zero vector because the forces are equal in magnitude and opposite in direction.",
+    evidence: "Equal and opposite vectors add to the zero vector.",
+    questionType: "FACTUAL",
+    difficulty: "EASY",
+    relevance: 96,
+    outcome: "PHY-1.1",
+    concept: "resultant of opposite vectors",
+  },
+  {
+    key: "vecb-perpendicular-resultant-hypotenuse",
+    text: "Forces of 3 N and 4 N act on a body at right angles to one another. How does the magnitude of their resultant compare with the two forces?",
+    options: [
+      "It equals 7 N, the sum of the two magnitudes",
+      "It equals 5 N, the hypotenuse of the right-angled triangle formed by them",
+      "It equals 4 N, the larger of the two forces",
+      "It equals 7 N whenever the two forces happen to act along one line",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Perpendicular components combine as R = (3 x 3 + 4 x 4)^0.5 = 5 N, so the resultant is larger than either force alone but smaller than their sum.",
+    evidence:
+      "The magnitude of a resultant formed from perpendicular components is the square root of the sum of their squares.",
+    questionType: "COMPARISON",
+    difficulty: "EASY",
+    relevance: 97,
+    outcome: "PHY-1.1",
+    concept: "perpendicular resultant magnitude",
+  },
+  {
+    key: "vecb-ninety-degrees-x-component-zero",
+    text: "A vector of magnitude 8 N is resolved along the x and y axes. What is the value of its x component if the vector is perpendicular to the x axis?",
+    options: [
+      "8 N, because the whole vector then acts along the x axis",
+      "4 N, because the two components must always be equal and opposite",
+      "0.8 N, because cos 90 is close to zero but not exactly zero",
+      "0 N, because Rx = 8 cos 90 = 0 and the whole 8 N lies along y",
+    ],
+    correctIndex: 3,
+    explanation:
+      "With the vector at 90 degrees to the x axis, Rx = 8 cos 90 degrees = 0, and the entire magnitude appears as Ry = 8 sin 90 = 8 N.",
+    evidence:
+      "A component along an axis is the magnitude of the vector multiplied by the cosine of the angle between them.",
+    questionType: "REASONING",
+    difficulty: "EASY",
+    relevance: 95,
+    outcome: "PHY-1.1",
+    concept: "component at right angle",
+  },
+  {
+    key: "vecb-sixty-degree-components-of-40n",
+    text: "A force of 40 N acts at 60 degrees above the horizontal. Its rectangular components are",
+    options: [
+      "Fx = 40 cos 60 = 20 N and Fy = 40 sin 60 = 34.6 N",
+      "Fx = 40 sin 60 = 34.6 N and Fy = 40 cos 60 = 20 N",
+      "Fx = 40 cos 30 = 34.6 N and Fy = 40 sin 30 = 20 N",
+      "Fx = 40 N and Fy = 0 N, since only the horizontal part acts on the body",
+    ],
+    correctIndex: 0,
+    explanation:
+      "The horizontal axis lies 60 degrees from the force, so Fx = 40 x 0.5 = 20 N, while the vertical component uses sin 60 degrees = 0.866 to give Fy = 34.6 N.",
+    evidence:
+      "A vector making angle theta with the x axis has components R cos theta along x and R sin theta along y.",
+    questionType: "APPLICATION",
+    difficulty: "MEDIUM",
+    relevance: 98,
+    outcome: "PHY-1.1",
+    concept: "components at sixty degrees",
+  },
+  {
+    key: "vecb-thirty-degree-components-of-50m",
+    text: "A displacement vector of magnitude 50 m makes an angle of 30 degrees with the horizontal. Its rectangular components are",
+    options: [
+      "Rx = 25.0 m and Ry = 43.3 m",
+      "Rx = 50 m and Ry = 0 m",
+      "Rx = 43.3 m and Ry = 25.0 m",
+      "Rx = 43.3 m and Ry = 43.3 m",
+    ],
+    correctIndex: 2,
+    explanation:
+      "The angle with the horizontal is 30 degrees, so Rx = 50 cos 30 = 50 x 0.866 = 43.3 m, while Ry = 50 sin 30 = 50 x 0.5 = 25.0 m.",
+    evidence:
+      "The components of a vector are the sides of a right-angled triangle whose hypotenuse is the vector.",
+    questionType: "APPLICATION",
+    difficulty: "MEDIUM",
+    relevance: 97,
+    outcome: "PHY-1.1",
+    concept: "components at thirty degrees",
+  },
+  {
+    key: "vecb-resultant-direction-first-quadrant",
+    text: "A resultant has components Rx = 3 N and Ry = 4 N. Which statement gives its direction correctly?",
+    options: [
+      "37 degrees below the +x axis",
+      "53 degrees above the +x axis, since both components are positive",
+      "127 degrees measured anticlockwise from the +x axis",
+      "90 degrees, because the two components have different sizes",
+    ],
+    correctIndex: 1,
+    explanation:
+      "The reference angle is tan^-1(4/3) = 53 degrees. Because Rx and Ry are both positive the resultant lies in the first quadrant, that is 53 degrees above the +x axis.",
+    evidence: "The direction of a resultant follows from the ratio of its components along the two axes.",
+    questionType: "APPLICATION",
+    difficulty: "MEDIUM",
+    relevance: 98,
+    outcome: "PHY-1.1",
+    concept: "resultant direction from components",
+  },
+  {
+    key: "vecb-resultant-direction-second-quadrant",
+    text: "A given resultant has components Rx = -4 N and Ry = +3 N. In which direction does this resultant point?",
+    options: [
+      "37 degrees above the +x axis",
+      "143 degrees below the +x axis",
+      "323 degrees measured anticlockwise from the +x axis",
+      "143 degrees anticlockwise from the +x axis, which places it in the second quadrant",
+    ],
+    correctIndex: 3,
+    explanation:
+      "A negative Rx with a positive Ry places the resultant in the second quadrant. The reference angle is tan^-1(3/4) = 37 degrees, so the anticlockwise angle from +x is 180 - 37 = 143 degrees.",
+    evidence:
+      "A resultant with a negative x component and a positive y component points into the second quadrant.",
+    questionType: "APPLICATION",
+    difficulty: "MEDIUM",
+    relevance: 97,
+    outcome: "PHY-1.1",
+    concept: "second quadrant direction",
+  },
+  {
+    key: "vecb-balanced-components-summation",
+    text: "Four forces act on a body with components +7 N and -7 N along the x axis, and +2 N and -2 N along the y axis. The resultant force on the body is",
+    options: [
+      "zero, because the components along each axis cancel in pairs",
+      "14 N along the x axis, since the two x components add",
+      "4 N along the y axis, since the two y components add",
+      "9 N at an angle in the first quadrant, since both axes contribute",
+    ],
+    correctIndex: 0,
+    explanation:
+      "Summing along x gives +7 - 7 = 0 and along y gives +2 - 2 = 0, so Rx = Ry = 0 and the resultant is the zero vector.",
+    evidence:
+      "A body in equilibrium has zero net force, so the components along each axis sum to zero.",
+    questionType: "APPLICATION",
+    difficulty: "MEDIUM",
+    relevance: 98,
+    outcome: "PHY-1.1",
+    concept: "zero net component sum",
+  },
+  {
+    key: "vecb-force-along-inclined-slope",
+    text: "A force of 60 N acts straight up a slope that is inclined at 30 degrees to the horizontal. What are the components of this force along and perpendicular to the slope?",
+    options: [
+      "52.0 N along the slope and 7.8 N perpendicular to it",
+      "30 N along the slope and 52.0 N perpendicular to it",
+      "52.0 N along the slope and 30 N perpendicular to it",
+      "60 N along the slope and 0 N perpendicular to it",
+    ],
+    correctIndex: 2,
+    explanation:
+      "Taking the slope as the reference axis, the angle to it is 30 degrees, so the component along the slope is 60 cos 30 = 52.0 N and the perpendicular component is 60 sin 30 = 30 N.",
+    evidence:
+      "Resolving a force along an inclined surface uses the angle measured from that surface.",
+    questionType: "APPLICATION",
+    difficulty: "MEDIUM",
+    relevance: 96,
+    outcome: "PHY-1.1",
+    concept: "projection on inclined surface",
+  },
+  {
+    key: "vecb-weight-on-sixty-degree-plane",
+    text: "A block of weight 20 N rests on a plane inclined at 60 degrees to the horizontal. What are the components of the weight along and perpendicular to the plane?",
+    options: [
+      "17.3 N along the plane and 10 N perpendicular to it",
+      "10 N along the plane and 17.3 N perpendicular to it",
+      "20 N along the plane and 0 N perpendicular to it",
+      "17.3 N along the plane and 17.3 N perpendicular to it",
+    ],
+    correctIndex: 1,
+    explanation:
+      "The weight is vertical while the plane is tilted 60 degrees, so the angle between the weight and the plane is 90 - 60 = 30 degrees. Hence the along-plane part is 20 cos 30 = 17.3 N and the normal part is 20 sin 30 = 10 N.",
+    evidence:
+      "The weight on an inclined plane is resolved into a component along the slope and one normal to the surface.",
+    questionType: "APPLICATION",
+    difficulty: "MEDIUM",
+    relevance: 97,
+    outcome: "PHY-1.1",
+    concept: "weight resolution on incline",
+  },
+  {
+    key: "vecb-third-quadrant-resultant",
+    text: "Two perpendicular forces give a resultant with components Rx = -6 N and Ry = -8 N. What are the magnitude and direction of this resultant?",
+    options: [
+      "10 N at 53 degrees below the +x axis",
+      "10 N at 53 degrees above the +x axis",
+      "10 N at 127 degrees above the +x axis",
+      "10 N at 233 degrees anticlockwise from the +x axis, which places it in the third quadrant",
+    ],
+    correctIndex: 3,
+    explanation:
+      "The magnitude is (36 + 64)^0.5 = 10 N. With both components negative the resultant lies in the third quadrant, where the reference angle of 53 degrees gives theta = 180 + 53 = 233 degrees.",
+    evidence:
+      "A resultant whose x and y components are both negative lies in the third quadrant.",
+    questionType: "MDCAT_STYLE",
+    difficulty: "MEDIUM",
+    relevance: 97,
+    outcome: "PHY-1.1",
+    concept: "third quadrant resultant",
+  },
+  {
+    key: "vecb-two-forces-net-horizontal-component",
+    text: "A body is pulled forward by a 20 N force at 40 degrees above the horizontal and pushed backward by a horizontal force of 12 N. What is the net horizontal component?",
+    options: [
+      "27.3 N forward, from adding 15.3 N and 12 N",
+      "0.9 N forward, from 12.9 N against 12 N",
+      "3.3 N forward, from 15.3 N forward against 12 N backward",
+      "15.3 N forward, because the backward force has no horizontal component",
+    ],
+    correctIndex: 2,
+    explanation:
+      "The inclined force contributes 20 cos 40 = 15.3 N forward, the horizontal force contributes 12 N backward, and the net horizontal component is 15.3 - 12 = 3.3 N forward.",
+    evidence: "Components along one axis are added algebraically with their signs.",
+    questionType: "MDCAT_STYLE",
+    difficulty: "MEDIUM",
+    relevance: 97,
+    outcome: "PHY-1.1",
+    concept: "net component of two forces",
+  },
+  {
+    key: "vecb-perpendicular-pair-resultant",
+    text: "A block is acted on by two forces, one of 9 N along the +x axis and the other of 12 N along the +y axis. What are the components and the magnitude of their resultant?",
+    options: [
+      "Rx = 9 N, Ry = 12 N and R = 15 N",
+      "Rx = 9 N, Ry = 12 N and R = 21 N",
+      "Rx = 12 N, Ry = 9 N and R = 15 N",
+      "Rx = 9 N, Ry = 12 N and R = 7.5 N",
+    ],
+    correctIndex: 0,
+    explanation:
+      "Each force lies along an axis, so the resultant keeps Rx = 9 N and Ry = 12 N, and its magnitude is (81 + 144)^0.5 = 15 N.",
+    evidence:
+      "The magnitude of a resultant is the square root of the sum of the squares of its perpendicular components.",
+    questionType: "MDCAT_STYLE",
+    difficulty: "MEDIUM",
+    relevance: 96,
+    outcome: "PHY-1.1",
+    concept: "resultant of axis-aligned forces",
+  },
+  {
+    key: "vecb-resolution-statements-correct",
+    text: "Four claims about vectors and their components are given. I. Two vectors are equal if their magnitudes are equal, regardless of direction. II. Resolving a vector into rectangular components gives two perpendicular vectors whose sum equals the original. III. A component of a vector always has a magnitude greater than the vector itself. IV. Rectangular components are taken along two mutually parallel axes. The one correct claim is",
+    options: ["I and II", "II only", "III only", "IV only"],
+    correctIndex: 1,
+    explanation:
+      "Only claim II holds, because adding the two rectangular components reproduces the original vector. Vector equality also requires the same direction, a component is a projection and cannot exceed the vector, and the two axes must be perpendicular rather than parallel.",
+    evidence:
+      "A vector may be replaced by an equivalent pair of mutually perpendicular component vectors.",
+    questionType: "STATEMENT_BASED",
+    difficulty: "MEDIUM",
+    relevance: 96,
+    outcome: "PHY-1.1",
+    concept: "resolution claims evaluation",
+  },
+  {
+    key: "vecb-resultant-magnitude-statements-incorrect",
+    text: "Four claims about vector addition are given. I. The resultant of two vectors is found by placing them tip to tail and joining the free ends. II. A vector can be resolved into two perpendicular components in many different pairs of axis directions. III. The two perpendicular components of a vector add back to that vector. IV. Perpendicular vectors of 3 N and 4 N have a resultant of magnitude 7 N. The one incorrect claim is",
+    options: ["I", "II", "III", "IV"],
+    correctIndex: 3,
+    explanation:
+      "For perpendicular components Pythagoras gives (9 + 16)^0.5 = 5 N, not 7 N, so claim IV is the incorrect one.",
+    evidence:
+      "Vector addition by the triangle law and resolution into perpendicular components are inverse operations.",
+    questionType: "STATEMENT_BASED",
+    difficulty: "MEDIUM",
+    relevance: 96,
+    outcome: "PHY-1.1",
+    concept: "perpendicular magnitude claim",
+  },
+  {
+    key: "vecb-equilibrium-condition-statements",
+    text: "A set of forces acting on a body is tested for equilibrium. I. The resultant of all the forces must be the zero vector. II. The sum of the components along x and the sum along y must each be zero. III. One of the forces must be larger than all the others together. IV. The body must be at rest. The claims that must hold are",
+    options: ["I and II", "I only", "II only", "III and IV"],
+    correctIndex: 0,
+    explanation:
+      "Equilibrium of forces means the net force vanishes, which is exactly what claims I and II state. No single force has to dominate the set, and zero net force allows motion at constant velocity, so rest is not required.",
+    evidence:
+      "A body in equilibrium has zero net force, so the resultant of all forces acting on it is the zero vector.",
+    questionType: "STATEMENT_BASED",
+    difficulty: "MEDIUM",
+    relevance: 98,
+    outcome: "PHY-1.1",
+    concept: "equilibrium condition",
+  },
+  {
+    key: "vecb-component-versus-vector-relationship",
+    text: "When a vector of magnitude 20 N is resolved along the x and y axes, which statement about the relation between that vector and its components is accurate?",
+    options: [
+      "Each component has the same magnitude as the vector",
+      "The components are the vector itself drawn twice",
+      "The components are projections of the vector on the two axes, and their vector sum gives the vector back",
+      "The components are always smaller than the vector and the vector equals the sum of their lengths",
+    ],
+    correctIndex: 2,
+    explanation:
+      "A component is a projection of the vector on a chosen axis, so the two perpendicular projections are smaller quantities that add vectorially to reproduce the original vector.",
+    evidence: "Rectangular components of a vector are its projections on mutually perpendicular axes.",
+    questionType: "FACTUAL",
+    difficulty: "MEDIUM",
+    relevance: 95,
+    outcome: "PHY-1.1",
+    concept: "component versus vector",
+  },
+  {
+    key: "vecb-hypotenuse-triangle-legs",
+    text: "A vector is drawn as the hypotenuse of a right-angled triangle whose two legs are parallel to the x and y axes. How are the legs obtained from the vector?",
+    options: [
+      "The legs are the vector multiplied by the sine of the angles it makes with each axis",
+      "The legs are the projections of the vector, equal to R cos theta along x and R sin theta along y",
+      "The legs add directly to R, since a hypotenuse equals the sum of the legs",
+      "The legs do not depend on the direction of the vector",
+    ],
+    correctIndex: 1,
+    explanation:
+      "In that triangle the leg along x is R cos theta and the leg along y is R sin theta, so the legs are projections of the vector on the two axes.",
+    evidence:
+      "The components of a vector are the sides of a right-angled triangle whose hypotenuse is the vector.",
+    questionType: "CONCEPTUAL",
+    difficulty: "MEDIUM",
+    relevance: 97,
+    outcome: "PHY-1.1",
+    concept: "right triangle components",
+  },
+  {
+    key: "vecb-component-signs-identify-quadrant",
+    text: "A vector has rectangular components Rx = -5 m and Ry = +9 m. Which description of the vector is correct?",
+    options: [
+      "First quadrant, with Rx positive and Ry positive",
+      "Third quadrant, with Rx negative and Ry negative",
+      "Fourth quadrant, with Rx positive and Ry negative",
+      "Second quadrant, with Rx negative and Ry positive",
+    ],
+    correctIndex: 3,
+    explanation:
+      "The sign pair of Rx negative and Ry positive is exactly the sign pattern of the second quadrant, so the vector points up and to the left of the origin.",
+    evidence: "The signs of the rectangular components identify the quadrant in which a vector points.",
+    questionType: "CONCEPTUAL",
+    difficulty: "MEDIUM",
+    relevance: 96,
+    outcome: "PHY-1.1",
+    concept: "component sign conventions",
+  },
+  {
+    key: "vecb-slanted-axis-projection",
+    text: "A force of 50 N is resolved along a slanted axis that makes 60 degrees with the force. The component of the force along that axis is",
+    options: [
+      "43.3 N, because the slanted axis behaves like a vertical direction",
+      "50 N, because a component may equal the whole force when the axes are chosen freely",
+      "25 N, because the projection along an axis uses the cosine of the angle with that axis",
+      "0 N, because a slanted axis cannot carry a component at all",
+    ],
+    correctIndex: 2,
+    explanation:
+      "The axis makes 60 degrees with the force, so the projection along it is 50 cos 60 = 25 N, and the part perpendicular to the axis is 50 sin 60 = 43.3 N.",
+    evidence:
+      "The component of a vector along any chosen axis is the magnitude multiplied by the cosine of the angle between them.",
+    questionType: "REASONING",
+    difficulty: "MEDIUM",
+    relevance: 95,
+    outcome: "PHY-1.1",
+    concept: "slanted axis projection",
+  },
+  {
+    key: "vecb-two-forces-resultant-nearly-cancelling",
+    text: "A body carries a 25 N force at 30 degrees above the horizontal together with a 20 N force directed along the -x axis. What are the magnitude and direction of the resultant?",
+    options: [
+      "12.6 N at 82 degrees below the +x axis",
+      "18 N along the +x axis, since the two horizontal components nearly cancel",
+      "12.6 N at 82 degrees above the +x axis",
+      "16 N at 30 degrees above the +x axis",
+    ],
+    correctIndex: 2,
+    explanation:
+      "Adding components gives Rx = 25 cos 30 - 20 = 21.7 - 20 = 1.7 N and Ry = 25 sin 30 = 12.5 N, so R = (1.7 x 1.7 + 12.5 x 12.5)^0.5 = 12.6 N at tan^-1(12.5/1.7) = 82 degrees, in the first quadrant.",
+    evidence:
+      "Forces are combined by summing components along each axis and then finding the magnitude and direction of the resultant.",
+    questionType: "REASONING",
+    difficulty: "HARD",
+    relevance: 97,
+    outcome: "PHY-1.1",
+    concept: "resultant of cancelling forces",
+  },
+  {
+    key: "vecb-resultant-calculation-step-order",
+    text: "Forces of 6 N and 8 N act at right angles on a body. The steps are listed as I. Choose mutually perpendicular x and y axes. II. Resolve each force into its components along those axes. III. Add the components along each axis separately to obtain Rx and Ry. IV. Use Pythagoras on Rx and Ry to obtain the magnitude of the resultant. The correct order of steps is",
+    options: ["II, I, IV, III", "I, II, III, IV", "III, IV, I, II", "IV, III, II, I"],
+    correctIndex: 1,
+    explanation:
+      "Components can only be taken after the axes have been fixed, so the axes come first, then the resolution, then the component-wise sum, and Pythagoras on those sums gives the magnitude.",
+    evidence:
+      "The magnitude of a resultant is the square root of the sum of the squares of its perpendicular components.",
+    questionType: "SEQUENCE",
+    difficulty: "HARD",
+    relevance: 94,
+    outcome: "PHY-1.1",
+    concept: "resultant calculation sequence",
+  },
+  {
+    key: "vecb-second-quadrant-angle-procedure",
+    text: "For a resultant with Rx = -6 N and Ry = +8 N, the steps are I. Find the reference angle from tan^-1 of the ratio of the two component magnitudes. II. Note that Rx is negative and Ry is positive. III. Use these signs to select the quadrant. IV. Obtain the final angle by subtracting the reference angle from 180 degrees. The correct order is",
+    options: ["I, IV, II, III", "III, II, IV, I", "IV, I, III, II", "II, III, I, IV"],
+    correctIndex: 3,
+    explanation:
+      "The signs of the components must be read first because they fix the quadrant, then the reference angle is taken from the component ratio, and only then is the quadrant angle built from it, giving 180 - 53 = 127 degrees.",
+    evidence:
+      "The direction of a resultant in the second quadrant equals 180 degrees minus its reference angle.",
+    questionType: "SEQUENCE",
+    difficulty: "HARD",
+    relevance: 94,
+    outcome: "PHY-1.1",
+    concept: "quadrant angle procedure",
+  },
+  {
+    key: "vecb-sixty-and-120-degree-forces-compared",
+    text: "Set P contains a single force of 10 N at 60 degrees to the +x axis, and set Q contains a single force of 10 N at 120 degrees to the +x axis. Which comparison of the two sets is correct?",
+    options: [
+      "Both give a resultant of 10 N, with equal vertical components but opposite signs of the horizontal component",
+      "Set P gives the larger resultant, since a smaller angle produces a larger sum",
+      "Both resultants point into the second quadrant",
+      "Set Q gives a zero resultant, because an angle beyond 90 degrees cancels the force",
+    ],
+    correctIndex: 0,
+    explanation:
+      "Both forces are 10 N, so both resultants are 10 N. The horizontal components are 10 cos 60 = +5 N and 10 cos 120 = -5 N, while the vertical components 10 sin 60 and 10 sin 120 are both 8.66 N.",
+    evidence:
+      "A horizontal component changes sign when the angle of a vector passes through 90 degrees, while the magnitude of the vector stays the same.",
+    questionType: "COMPARISON",
+    difficulty: "HARD",
+    relevance: 95,
+    outcome: "PHY-1.1",
+    concept: "component sign change at ninety degrees",
+  },
+];

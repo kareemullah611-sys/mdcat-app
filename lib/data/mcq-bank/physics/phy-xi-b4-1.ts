@@ -1,0 +1,463 @@
+import type { BankItem } from "../build";
+
+export const items: BankItem[] = [
+  {
+    key: "terminal-balance-net-force",
+    text: "A body falling through air slows down in its acceleration until it settles at a constant speed. At that limiting speed, the resultant force on the body and its acceleration are",
+    options: [
+      "zero for the force but not for the acceleration",
+      "both zero, because the upward drag has balanced the weight",
+      "both equal to the weight, because drag has become negligible",
+      "both zero, because the body has come to rest altogether",
+    ],
+    correctIndex: 1,
+    explanation:
+      "At terminal velocity the upward drag equals the weight, so the resultant force mg - R is zero and a = F/m is zero too, yet the body keeps moving at that constant speed.",
+    evidence:
+      "Terminal velocity is reached when the upward drag force equals the weight of the falling body, so the acceleration becomes zero.",
+    questionType: "CONCEPTUAL",
+    difficulty: "EASY",
+    relevance: 93,
+    outcome: "PHY-5.1",
+    concept: "terminal velocity balance",
+  },
+  {
+    key: "terminal-drag-upward-balance",
+    text: "Just before a falling body settles at terminal velocity, the drag force acting on it points",
+    options: [
+      "upward, along the line of motion and against the fall",
+      "downward, so that it adds to the pull of gravity",
+      "sideways, because air is pushed out of the way",
+      "downward, because the body compresses the air beneath it",
+    ],
+    correctIndex: 0,
+    explanation:
+      "Drag always opposes the motion of a body through the fluid, so for a falling body it acts upward, and it is this upward force that grows until it balances the weight.",
+    evidence:
+      "The drag exerted by a fluid on a moving body acts opposite to the direction of the body's motion through the fluid.",
+    questionType: "FACTUAL",
+    difficulty: "EASY",
+    relevance: 92,
+    outcome: "PHY-5.1",
+    concept: "drag direction",
+  },
+  {
+    key: "terminal-constant-velocity",
+    text: "A rain drop reaches terminal velocity and continues to fall. The acceleration of the drop during this stage of the fall is",
+    options: [
+      "still equal to g, because gravity never switches off",
+      "positive but steadily falling, because the drop keeps speeding up",
+      "negative, because the drop is slowing down to terminal speed",
+      "zero, because it now moves with constant velocity",
+    ],
+    correctIndex: 3,
+    explanation:
+      "Once the drag equals the weight there is no resultant force left, so the drop travels with constant velocity and its acceleration is exactly zero.",
+    evidence: "At terminal velocity a falling body moves with constant velocity, so its acceleration is zero.",
+    questionType: "CONCEPTUAL",
+    difficulty: "EASY",
+    relevance: 94,
+    outcome: "PHY-5.1",
+    concept: "acceleration at terminal velocity",
+  },
+  {
+    key: "terminal-asymptotic-limit",
+    text: "The terminal velocity of a falling body is best described as a speed that",
+    options: [
+      "is attained after a fixed interval of two seconds in every fluid",
+      "is exceeded briefly whenever the body enters a denser layer",
+      "is approached gradually and never actually attained in finite time",
+      "is fixed once and for all by the first instant of the fall",
+    ],
+    correctIndex: 2,
+    explanation:
+      "Drag grows continuously with speed, so the acceleration keeps shrinking and the velocity creeps upward towards the limit, which is an ideal value approached asymptotically.",
+    evidence:
+      "As a falling body speeds up its drag increases until it balances the weight, so the limiting speed is approached asymptotically.",
+    questionType: "FACTUAL",
+    difficulty: "EASY",
+    relevance: 90,
+    outcome: "PHY-5.1",
+    concept: "asymptotic limiting speed",
+  },
+  {
+    key: "terminal-linear-drag-value",
+    text: "For a body falling in a fluid whose drag is kv, with k = 25 N s per metre, the terminal velocity of a body of mass 5 kg is (take g = 10 m s^-2)",
+    options: ["2 m s^-1", "0.5 m s^-1", "5 m s^-1", "12.5 m s^-1"],
+    correctIndex: 0,
+    explanation:
+      "At terminal velocity kv = mg, so v = 5 x 10 / 25 = 50 / 25 = 2 m s^-1; a larger k would mean more drag at every speed and therefore a lower terminal velocity.",
+    evidence:
+      "When the drag on a falling body is proportional to speed, its terminal velocity follows by setting kv equal to the weight mg.",
+    questionType: "MDCAT_STYLE",
+    difficulty: "MEDIUM",
+    relevance: 93,
+    outcome: "PHY-5.1",
+    concept: "terminal velocity calculation",
+  },
+  {
+    key: "terminal-exponential-deficit",
+    text: "A falling body approaches terminal velocity so that the gap between its speed and the terminal velocity is halved in each equal time interval. How many such intervals pass before the body is within one eighth of its terminal speed?",
+    options: ["one", "two", "three", "four"],
+    correctIndex: 2,
+    explanation:
+      "The gap shrinks by a factor of two per interval, so it is first vt/2, then vt/4 and then vt/8, and one eighth of the terminal speed is therefore reached in the third interval.",
+    evidence:
+      "The velocity of a falling body approaches terminal velocity exponentially, so the remaining gap becomes a small fraction of the limiting speed.",
+    questionType: "APPLICATION",
+    difficulty: "MEDIUM",
+    relevance: 88,
+    outcome: "PHY-5.1",
+    concept: "exponential velocity approach",
+  },
+  {
+    key: "terminal-acceleration-release-vs-limit",
+    text: "The acceleration of a body released from rest in air and the acceleration of the same body once it is falling at terminal velocity compare as",
+    options: [
+      "both zero, because air cannot produce an acceleration",
+      "g at release and zero at terminal velocity",
+      "zero at release and g at terminal velocity",
+      "g at release and g at terminal velocity",
+    ],
+    correctIndex: 1,
+    explanation:
+      "At release the speed and hence the drag are zero, so the weight alone acts and a = g, while at terminal velocity the drag cancels the weight and the acceleration has fallen to zero.",
+    evidence:
+      "A falling body begins with acceleration equal to g and slows down to zero acceleration as it approaches terminal velocity.",
+    questionType: "COMPARISON",
+    difficulty: "MEDIUM",
+    relevance: 94,
+    outcome: "PHY-5.1",
+    concept: "acceleration comparison",
+  },
+  {
+    key: "terminal-fluid-without-drag",
+    text: "If a body were released in a hypothetical fluid that exerted no drag on it at all, the body would",
+    options: [
+      "fall for ever without reaching any terminal velocity",
+      "reach terminal velocity once its speed stopped increasing",
+      "reach terminal velocity after a time fixed by the fluid",
+      "fall at constant velocity from the very moment of release",
+    ],
+    correctIndex: 3,
+    explanation:
+      "Terminal velocity exists only because drag grows until it cancels the weight, so with zero drag the resultant force stays equal to the weight and the speed keeps on growing.",
+    evidence: "Terminal velocity results from the balance of weight and drag, so it cannot occur where drag is absent.",
+    questionType: "REASONING",
+    difficulty: "MEDIUM",
+    relevance: 86,
+    outcome: "PHY-5.1",
+    concept: "absence of drag",
+  },
+  {
+    key: "terminal-drag-speed-statement",
+    text: "Two statements about a falling body are considered: the drag on it increases as its speed increases, and its acceleration decreases as its speed increases. Which conclusion follows correctly from the two statements?",
+    options: [
+      "The speed must level off at a value where drag and weight balance",
+      "The speed must pass beyond the terminal value and then fall back",
+      "The drag must act downward, because it grows with speed",
+      "The speed must grow faster and faster, because drag pushes the body down",
+    ],
+    correctIndex: 0,
+    explanation:
+      "As the speed rises the drag grows, so the resultant force mg - R keeps shrinking, the acceleration keeps falling and the speed settles where R equals mg instead of overshooting.",
+    evidence: "Drag on a falling body increases with speed until it balances the weight, which fixes the terminal velocity.",
+    questionType: "STATEMENT_BASED",
+    difficulty: "MEDIUM",
+    relevance: 92,
+    outcome: "PHY-5.1",
+    concept: "drag speed relation",
+  },
+  {
+    key: "terminal-mass-area-ratio-compare",
+    text: "Two spheres of the same shape fall through the same air, one of mass 2 kg with cross-sectional area 4 cm^2 and the other of mass 2 kg with cross-sectional area 9 cm^2. The ratio of the terminal velocity of the smaller sphere to that of the larger one is",
+    options: ["2.25", "0.67", "1.5", "3.0"],
+    correctIndex: 2,
+    explanation:
+      "Terminal velocity varies as the square root of m/A, so the ratio is sqrt[(2/4)/(2/9)] = sqrt(9/4) = 3/2 = 1.5, and the smaller cross-section meets less drag at every speed.",
+    evidence:
+      "A larger cross-sectional area produces more drag at the same speed and therefore lowers the terminal velocity of a falling body.",
+    questionType: "MDCAT_STYLE",
+    difficulty: "MEDIUM",
+    relevance: 91,
+    outcome: "PHY-5.1",
+    concept: "terminal velocity ratio",
+  },
+  {
+    key: "terminal-gravity-double-effect",
+    text: "A body whose terminal velocity is 20 m s^-1 near the Earth's surface is dropped on a planet where the gravitational acceleration is twice that of the Earth, with the body and the surrounding fluid unchanged. The terminal velocity there is",
+    options: ["10 m s^-1", "28.3 m s^-1", "40 m s^-1", "80 m s^-1"],
+    correctIndex: 1,
+    explanation:
+      "Terminal velocity varies as the square root of g because it follows from 2mg = rho Cd A v^2, so doubling g multiplies it by sqrt(2), giving 20 x 1.414 = 28.3 m s^-1.",
+    evidence:
+      "The terminal velocity of a falling body is set by the balance between its weight mg and the drag of the fluid.",
+    questionType: "APPLICATION",
+    difficulty: "MEDIUM",
+    relevance: 89,
+    outcome: "PHY-5.1",
+    concept: "gravity change effect",
+  },
+  {
+    key: "terminal-fall-stage-sequence",
+    text: "As a body released in air passes through the stages of its fall, the sequence it passes through is",
+    options: [
+      "drag exceeds weight, speed falls, then drag vanishes",
+      "constant velocity, rising acceleration, then zero drag",
+      "weight exceeds drag, drag grows, then constant velocity",
+      "zero drag at constant speed, then acceleration grows",
+    ],
+    correctIndex: 2,
+    explanation:
+      "The weight acts first and the drag is still zero, so the body speeds up; the growing drag then reduces the acceleration to zero and the fall continues at constant velocity.",
+    evidence:
+      "A falling body first accelerates under its weight, then the increasing drag reduces its acceleration until it falls at constant terminal velocity.",
+    questionType: "SEQUENCE",
+    difficulty: "MEDIUM",
+    relevance: 90,
+    outcome: "PHY-5.1",
+    concept: "fall stage sequence",
+  },
+  {
+    key: "terminal-parachute-force-explanation",
+    text: "Opening a parachute greatly lowers the terminal velocity of a skydiver chiefly because",
+    options: [
+      "it removes most of the weight of the skydiver",
+      "it turns the vertical fall into a circular motion",
+      "it greatly increases the drag at every speed of the fall",
+      "it lowers the acceleration due to gravity on the skydiver",
+    ],
+    correctIndex: 2,
+    explanation:
+      "The parachute presents a very large area to the air, so the drag at any given speed is far bigger and it balances the same weight at a much lower speed.",
+    evidence: "A parachute increases the resisting force of the air and so reduces the terminal velocity of the falling body.",
+    questionType: "REASONING",
+    difficulty: "MEDIUM",
+    relevance: 92,
+    outcome: "PHY-5.1",
+    concept: "parachute drag increase",
+  },
+  {
+    key: "terminal-parachute-speed-value",
+    text: "The reason a parachutist wants a small terminal velocity after opening the parachute is that this small speed allows the parachutist to",
+    options: [
+      "land with a longer time in which to slow down and steady the body",
+      "rise again, because the upward drag overcomes the weight",
+      "keep accelerating for a longer time during the descent",
+      "reach the ground while no resultant force acts at all",
+    ],
+    correctIndex: 0,
+    explanation:
+      "A low terminal velocity means the resultant force, and therefore the deceleration on opening, stays small, which gives time to land and to control the descent.",
+    evidence: "A parachute reduces the terminal velocity so that the descent can be brought under control.",
+    questionType: "CONCEPTUAL",
+    difficulty: "MEDIUM",
+    relevance: 88,
+    outcome: "PHY-5.1",
+    concept: "controlled low terminal speed",
+  },
+  {
+    key: "terminal-rain-drop-skydiver-pair",
+    text: "A small rain drop and a fully equipped skydiver, both falling in still air, are alike in the respect that",
+    options: [
+      "each reaches its terminal velocity after exactly the same time",
+      "each reaches terminal velocity where drag balances weight",
+      "each reaches terminal velocity after falling the same distance",
+      "each keeps accelerating steadily right down to the ground",
+    ],
+    correctIndex: 1,
+    explanation:
+      "However different their masses and shapes, both settle at terminal velocity under the same condition, namely the point where the upward drag equals the weight.",
+    evidence: "Every body falling through a fluid reaches terminal velocity when the drag balances its weight.",
+    questionType: "FACTUAL",
+    difficulty: "MEDIUM",
+    relevance: 91,
+    outcome: "PHY-5.1",
+    concept: "terminal velocity condition",
+  },
+  {
+    key: "terminal-constant-velocity-statement",
+    text: "A stone is dropped from rest into deep water and sinks slowly. Two statements are made: at terminal velocity the stone travels with constant velocity, and at terminal velocity the kinetic energy of the stone also stays constant. Which option follows correctly?",
+    options: [
+      "The first statement is wrong, because constant velocity needs a driving force",
+      "The second statement is wrong, because constant velocity means changing energy",
+      "Both statements are wrong, because a sinking body always accelerates",
+      "Both statements are right, because a fixed speed fixes the kinetic energy",
+    ],
+    correctIndex: 3,
+    explanation:
+      "Constant velocity means the speed no longer changes, so the value of one half mv^2 stays the same through the stage and the kinetic energy is constant as well.",
+    evidence:
+      "A body falling at terminal velocity moves with constant velocity and therefore also with constant kinetic energy.",
+    questionType: "STATEMENT_BASED",
+    difficulty: "MEDIUM",
+    relevance: 89,
+    outcome: "PHY-5.1",
+    concept: "constant velocity and energy",
+  },
+  {
+    key: "terminal-light-vs-heavy-body",
+    text: "Two balls of the same size and shape but different masses are dropped in air. The heavier ball is expected to have a higher terminal velocity mainly because",
+    options: [
+      "it pushes the air out of its way more gently",
+      "it experiences a smaller gravitational pull on each kilogram",
+      "it has a larger weight for the same drag force",
+      "it is pushed downwards by the air that it compresses",
+    ],
+    correctIndex: 2,
+    explanation:
+      "Terminal velocity is reached where drag equals weight, and two balls of the same shape meet the same drag at the same speed, so only the larger weight can support a higher speed.",
+    evidence:
+      "Terminal velocity increases with the weight of the body and falls as the drag produced by its shape and area increases.",
+    questionType: "COMPARISON",
+    difficulty: "MEDIUM",
+    relevance: 92,
+    outcome: "PHY-5.1",
+    concept: "mass and terminal speed",
+  },
+  {
+    key: "terminal-area-double-effect",
+    text: "Consider a falling body whose terminal velocity is 15 m s^-1. Its area facing the fluid is then doubled with everything else unchanged. The new terminal velocity is",
+    options: ["10.6 m s^-1", "7.5 m s^-1", "21.2 m s^-1", "30 m s^-1"],
+    correctIndex: 0,
+    explanation:
+      "Terminal velocity varies inversely as the square root of the area, since 2mg = rho Cd A v^2, so doubling the area divides it by sqrt(2), giving 15 / 1.414 = 10.6 m s^-1.",
+    evidence:
+      "Doubling the area facing the fluid doubles the drag at a given speed and so lowers the terminal velocity.",
+    questionType: "APPLICATION",
+    difficulty: "MEDIUM",
+    relevance: 90,
+    outcome: "PHY-5.1",
+    concept: "area doubling effect",
+  },
+  {
+    key: "terminal-two-step-drag-then-net",
+    text: "A 4 kg body falls in a fluid whose drag is kv, with k = 20 N s per metre and g = 10 m s^-2. While the body is falling at 1 m s^-1, the magnitude of the resultant force on it is",
+    options: ["20 N", "60 N", "40 N", "30 N"],
+    correctIndex: 1,
+    explanation:
+      "The weight is mg = 4 x 10 = 40 N and the drag at 1 m s^-1 is kv = 20 x 1 = 20 N, so the resultant is 40 - 20 = 20 N and the acceleration is 5 m s^-2, well below the terminal velocity of 2 m s^-1.",
+    evidence:
+      "The resultant force on a falling body is its weight minus the drag, and it becomes zero only when the drag equals the weight.",
+    questionType: "MDCAT_STYLE",
+    difficulty: "HARD",
+    relevance: 90,
+    outcome: "PHY-5.1",
+    concept: "net force below terminal",
+  },
+  {
+    key: "terminal-time-to-limit-statement",
+    text: "Two statements about terminal velocity are compared: a body reaches its terminal velocity after a time that depends on its mass, area and the fluid, and a body at terminal velocity has zero acceleration. Which option follows correctly from the two statements?",
+    options: [
+      "Both are wrong, because terminal velocity is fixed by gravity alone",
+      "The second is wrong, because a falling body must keep accelerating",
+      "The first is wrong, because all bodies reach terminal velocity together",
+      "Both are right, because only the force balance fixes the acceleration to zero",
+    ],
+    correctIndex: 3,
+    explanation:
+      "The time taken to approach the limit depends on how quickly the drag builds up, which varies with the body and the fluid, while the zero acceleration follows directly from drag balancing the weight.",
+    evidence:
+      "The approach to terminal velocity depends on the body and the fluid, and at terminal velocity the acceleration is zero.",
+    questionType: "STATEMENT_BASED",
+    difficulty: "HARD",
+    relevance: 87,
+    outcome: "PHY-5.1",
+    concept: "approach time and acceleration",
+  },
+  {
+    key: "terminal-acceleration-drag-sequence",
+    text: "While a body released from rest speeds up in a fluid, the drag and the acceleration change with speed in the sequence",
+    options: [
+      "drag rises, acceleration rises, and then drag becomes zero",
+      "drag falls, acceleration falls, and then drag balances weight",
+      "drag rises from zero, acceleration falls to zero, and then drag equals weight",
+      "drag rises, acceleration rises to g, and then drag exceeds weight",
+    ],
+    correctIndex: 2,
+    explanation:
+      "Drag starts at zero for a body at rest and grows as the speed rises, and the shrinking resultant force brings the acceleration down to zero exactly where the drag equals the weight.",
+    evidence:
+      "Drag on a falling body increases with speed until it equals the weight, at which point the acceleration has fallen to zero.",
+    questionType: "SEQUENCE",
+    difficulty: "MEDIUM",
+    relevance: 89,
+    outcome: "PHY-5.1",
+    concept: "drag acceleration sequence",
+  },
+  {
+    key: "terminal-mass-and-area-combined",
+    text: "Body A falls with mass 4 kg and cross-sectional area 2 cm^2 while body B falls with mass 1 kg and cross-sectional area 8 cm^2, through the same fluid and with the same drag coefficient. Comparing them, the terminal velocity of A is",
+    options: [
+      "four times the terminal velocity of B",
+      "twice the terminal velocity of B",
+      "one half of the terminal velocity of B",
+      "equal to the terminal velocity of B",
+    ],
+    correctIndex: 0,
+    explanation:
+      "Terminal velocity varies as the square root of m/A, which gives sqrt(4/2) = 1.41 for A and sqrt(1/8) = 0.35 for B, so A reaches four times the speed of B.",
+    evidence:
+      "Terminal velocity increases with the mass of the body and decreases with the cross-sectional area facing the fluid.",
+    questionType: "COMPARISON",
+    difficulty: "HARD",
+    relevance: 88,
+    outcome: "PHY-5.1",
+    concept: "combined mass and area",
+  },
+  {
+    key: "terminal-weaker-gravity-statement",
+    text: "A body falls in air near a planet whose gravitational acceleration is smaller than that near the Earth, all other conditions being the same. Compared with its fall near the Earth, the body on that planet will",
+    options: [
+      "reach terminal velocity at the same speed but after a longer time",
+      "reach terminal velocity sooner, because the drag builds up faster",
+      "keep accelerating for ever, because the weaker gravity sets no limit",
+      "reach terminal velocity at a lower speed",
+    ],
+    correctIndex: 3,
+    explanation:
+      "Terminal velocity follows from the weight mg, so a weaker gravity means the drag only has to balance a smaller weight and it reaches that balance at a lower speed.",
+    evidence:
+      "The terminal velocity of a falling body is fixed by the balance between its weight and the drag, so it changes with the strength of gravity.",
+    questionType: "STATEMENT_BASED",
+    difficulty: "MEDIUM",
+    relevance: 88,
+    outcome: "PHY-5.1",
+    concept: "weaker gravity effect",
+  },
+  {
+    key: "terminal-linear-drag-balance-check",
+    text: "The drag on a body moving in a fluid is proportional to its speed with a constant of 60 N s per metre. For a body of mass 30 kg falling where g = 10 m s^-2, the terminal velocity is",
+    options: ["18 m s^-1", "10 m s^-1", "2 m s^-1", "5 m s^-1"],
+    correctIndex: 3,
+    explanation:
+      "Setting kv = mg gives v = 30 x 10 / 60 = 300 / 60 = 5 m s^-1, and at that speed the drag of 60 x 5 = 300 N exactly matches the weight of 300 N.",
+    evidence:
+      "For drag proportional to speed the terminal velocity of a falling body is obtained from kv = mg.",
+    questionType: "APPLICATION",
+    difficulty: "MEDIUM",
+    relevance: 92,
+    outcome: "PHY-5.1",
+    concept: "linear drag balance",
+  },
+  {
+    key: "terminal-asymptotic-ideal-value",
+    text: "In an ideal fluid the terminal velocity of a falling body is a limiting value rather than a speed the body attains at any definite instant. This tells us that",
+    options: [
+      "the drag on the body changes direction once the limit is approached",
+      "the velocity approaches the limit while a small positive acceleration remains",
+      "the weight of the body must be gradually reduced during the fall",
+      "the body stops moving once its velocity has reached the limiting value",
+    ],
+    correctIndex: 1,
+    explanation:
+      "The velocity creeps up towards the limit while the drag is still a little short of the weight, so a small positive acceleration survives however long the fall continues and the limit is never reached exactly.",
+    evidence:
+      "Terminal velocity is a limiting speed approached asymptotically, with the acceleration tending to zero as the velocity approaches it.",
+    questionType: "CONCEPTUAL",
+    difficulty: "HARD",
+    relevance: 87,
+    outcome: "PHY-5.1",
+    concept: "asymptotic limiting value",
+  },
+];

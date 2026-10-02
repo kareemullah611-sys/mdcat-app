@@ -5,7 +5,20 @@ export const MCQ_PROMPT_VERSIONS = {
   validation: "mdcat-independent-validation-v1",
 } as const;
 
+/**
+ * Versioned provenance for the scaled Grade XI banks. The authored parts follow
+ * `lib/data/mcq-bank/authoring-guide.md`, which is a different generation
+ * prompt from the 100-question pilots, so it gets its own version (§106.13)
+ * instead of silently relabelling the existing pilot questions.
+ */
+export const BANK_PROMPT_VERSIONS = {
+  generation: "mdcat-bank-authoring-v1",
+  validation: "mdcat-independent-validation-v1",
+} as const;
+
 export const PILOT_DIFFICULTY_TARGETS = { EASY: 15, MEDIUM: 70, HARD: 15 } as const;
+
+export type DifficultyTargets = { EASY: number; MEDIUM: number; HARD: number };
 
 export type GroundedMcq = {
   generationKey: string;
@@ -84,13 +97,21 @@ export function validateGroundedPilot(
 }
 
 export function validatePilotBalance(questions: GroundedMcq[]): PilotIssue[] {
+  return validateDifficultyBalance(questions, PILOT_DIFFICULTY_TARGETS);
+}
+
+/**
+ * Difficulty distribution check with caller-supplied targets (§87 — balance
+ * targets stay configurable instead of being hard-coded to one pilot size).
+ */
+export function validateDifficultyBalance(questions: GroundedMcq[], targets: DifficultyTargets): PilotIssue[] {
   const counts = { EASY: 0, MEDIUM: 0, HARD: 0 };
   for (const question of questions) counts[question.difficulty] += 1;
-  return (Object.keys(PILOT_DIFFICULTY_TARGETS) as Array<keyof typeof PILOT_DIFFICULTY_TARGETS>)
-    .filter((level) => counts[level] !== PILOT_DIFFICULTY_TARGETS[level])
+  return (Object.keys(targets) as Array<keyof DifficultyTargets>)
+    .filter((level) => counts[level] !== targets[level])
     .map((level) => ({
       key: "pilot",
       code: "DIFFICULTY_BALANCE",
-      message: `${level}: expected ${PILOT_DIFFICULTY_TARGETS[level]}, received ${counts[level]}.`,
+      message: `${level}: expected ${targets[level]}, received ${counts[level]}.`,
     }));
 }

@@ -1,0 +1,167 @@
+/**
+ * Grade XII outcome -> textbook chapter coverage (spec §12, §22, §72).
+ *
+ * Companion to `coverage.ts`, which covers Grade XI. Chapter numbers mirror the
+ * imported books: FBISE Grade XI/XII Biology, Chemistry and Physics, and
+ * Balochistan Grade XI/XII Biology, Chemistry and Physics. Only the Grade XI
+ * Biology books were imported with PDF page ranges, so only those sources carry
+ * `pageStart`/`pageEnd` — no page number is ever invented.
+ *
+ * Three Biology outcomes are taught by the Grade XI books rather than a Grade XII
+ * book, so their provenance points there honestly:
+ *   - Unit 11 CIRCULATION   -> FBISE Grade XI ch.12 "Circulation" (pp.269-292)
+ *   - Unit 12 IMMUNITY      -> FBISE Grade XI ch.13 "Immunity" (pp.293-310) and
+ *                              Balochistan Grade XII ch.27 "Immunity and Vulnerability"
+ *   - Unit 14 DIGESTION     -> FBISE Grade XI ch.11 "Digestion" (pp.253-268)
+ * Unit 13 RESPIRATION exists only in the Balochistan Grade XII book (ch.14), so
+ * those outcomes carry the Balochistan source alone.
+ *
+ * Unit and topic text always come from the official curriculum module, never
+ * from this file.
+ */
+
+import type { CoverageSource } from "./coverage";
+
+export const BIOLOGY_XII_SOURCES: Record<string, CoverageSource[]> = {
+  "BIO-5.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 3 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 17 }],
+  "BIO-5.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 3 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 17 }],
+  "BIO-5.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 3 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 17 }],
+  "BIO-5.4": [{ boardCode: "FBISE", grade: 12, chapterNumber: 3 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 17 }],
+  "BIO-5.5": [{ boardCode: "FBISE", grade: 12, chapterNumber: 3 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 17 }],
+  "BIO-5.6": [{ boardCode: "FBISE", grade: 12, chapterNumber: 3 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 17 }],
+  "BIO-5.7": [{ boardCode: "FBISE", grade: 12, chapterNumber: 3 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 17 }],
+  "BIO-7.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 10 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 24 }],
+  "BIO-7.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 10 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 24 }],
+  "BIO-7.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 10 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 24 }],
+  "BIO-8.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 4 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 20 }],
+  "BIO-8.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 4 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 20 }],
+  "BIO-8.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 4 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 20 }],
+  "BIO-9.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 2 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "BIO-9.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 2 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "BIO-9.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 2 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "BIO-9.4": [{ boardCode: "FBISE", grade: 12, chapterNumber: 2 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "BIO-9.5": [{ boardCode: "FBISE", grade: 12, chapterNumber: 2 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "BIO-9.6": [{ boardCode: "FBISE", grade: 12, chapterNumber: 2 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "BIO-9.7": [{ boardCode: "FBISE", grade: 12, chapterNumber: 2 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "BIO-10.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 22 }],
+  "BIO-10.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 22 }],
+  "BIO-10.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 6 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 23 }],
+  "BIO-10.4": [{ boardCode: "FBISE", grade: 12, chapterNumber: 6 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 23 }],
+  "BIO-10.5": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 22 }],
+  "BIO-10.6": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 22 }],
+  "BIO-10.7": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 22 }],
+  "BIO-11.1": [{ boardCode: "FBISE", grade: 11, chapterNumber: 12, pageStart: 269, pageEnd: 292 }],
+  "BIO-11.2": [{ boardCode: "FBISE", grade: 11, chapterNumber: 12, pageStart: 269, pageEnd: 292 }],
+  "BIO-11.3": [{ boardCode: "FBISE", grade: 11, chapterNumber: 12, pageStart: 269, pageEnd: 292 }],
+  "BIO-11.4": [{ boardCode: "FBISE", grade: 11, chapterNumber: 12, pageStart: 269, pageEnd: 292 }],
+  "BIO-12.1": [{ boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 27 }, { boardCode: "FBISE", grade: 11, chapterNumber: 13, pageStart: 293, pageEnd: 310 }],
+  "BIO-13.1": [{ boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 14 }],
+  "BIO-13.2": [{ boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 14 }],
+  "BIO-13.3": [{ boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 14 }],
+  "BIO-14.1": [{ boardCode: "FBISE", grade: 11, chapterNumber: 11, pageStart: 253, pageEnd: 268 }],
+  "BIO-14.2": [{ boardCode: "FBISE", grade: 11, chapterNumber: 11, pageStart: 253, pageEnd: 268 }],
+  "BIO-15.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 15 }],
+  "BIO-15.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 15 }],
+  "BIO-15.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 15 }],
+  "BIO-15.4": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 15 }],
+  "BIO-15.5": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 15 }],
+  "BIO-15.6": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 15 }],
+  "BIO-15.7": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 15 }],
+  "BIO-15.8": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 15 }],
+  "BIO-16.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 9 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 26 }],
+  "BIO-16.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 9 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 26 }],
+  "BIO-16.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 9 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 26 }],
+};
+
+export const CHEMISTRY_XII_SOURCES: Record<string, CoverageSource[]> = {
+  "CHEM-11.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 13 }],
+  "CHEM-11.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 13 }],
+  "CHEM-11.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 2 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 13 }],
+  "CHEM-11.4": [{ boardCode: "FBISE", grade: 12, chapterNumber: 2 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 13 }],
+  "CHEM-11.5": [{ boardCode: "FBISE", grade: 12, chapterNumber: 3 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 13 }],
+  "CHEM-12.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 6 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 14 }],
+  "CHEM-13.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 7 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 15 }],
+  "CHEM-13.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 7 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 15 }],
+  "CHEM-13.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 7 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 15 }],
+  "CHEM-13.4": [{ boardCode: "FBISE", grade: 12, chapterNumber: 7 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 15 }],
+  "CHEM-14.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.4": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.5": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.6": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.7": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.8": [{ boardCode: "FBISE", grade: 12, chapterNumber: 9 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.9": [{ boardCode: "FBISE", grade: 12, chapterNumber: 9 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.10": [{ boardCode: "FBISE", grade: 12, chapterNumber: 9 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.11": [{ boardCode: "FBISE", grade: 12, chapterNumber: 9 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.12": [{ boardCode: "FBISE", grade: 12, chapterNumber: 9 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.13": [{ boardCode: "FBISE", grade: 12, chapterNumber: 9 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.14": [{ boardCode: "FBISE", grade: 12, chapterNumber: 9 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.15": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.16": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.17": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.18": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-14.19": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 16 }],
+  "CHEM-15.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 10 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 17 }],
+  "CHEM-15.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 10 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 17 }],
+  "CHEM-15.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 10 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 17 }],
+  "CHEM-15.4": [{ boardCode: "FBISE", grade: 12, chapterNumber: 10 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 17 }],
+  "CHEM-16.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 11 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 18 }],
+  "CHEM-16.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 11 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 18 }],
+  "CHEM-16.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 11 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 18 }],
+  "CHEM-16.4": [{ boardCode: "FBISE", grade: 12, chapterNumber: 11 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 18 }],
+  "CHEM-16.5": [{ boardCode: "FBISE", grade: 12, chapterNumber: 11 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 18 }],
+  "CHEM-16.6": [{ boardCode: "FBISE", grade: 12, chapterNumber: 11 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 18 }],
+  "CHEM-17.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 12 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 19 }],
+  "CHEM-17.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 12 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 19 }],
+  "CHEM-17.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 12 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 19 }],
+  "CHEM-17.4": [{ boardCode: "FBISE", grade: 12, chapterNumber: 12 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 19 }],
+  "CHEM-17.5": [{ boardCode: "FBISE", grade: 12, chapterNumber: 12 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 19 }],
+  "CHEM-17.6": [{ boardCode: "FBISE", grade: 12, chapterNumber: 12 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 19 }],
+  "CHEM-18.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 13 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 20 }],
+  "CHEM-18.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 13 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 20 }],
+  "CHEM-18.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 13 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 20 }],
+  "CHEM-19.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 14 }],
+  "CHEM-19.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 14 }],
+  "CHEM-19.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 14 }],
+  "CHEM-20.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 15 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 22 }],
+  "CHEM-20.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 15 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 22 }],
+  "CHEM-20.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 15 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 22 }],
+};
+
+export const PHYSICS_XII_SOURCES: Record<string, CoverageSource[]> = {
+  "PHY-8.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 11 }],
+  "PHY-8.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 11 }],
+  "PHY-8.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 11 }],
+  "PHY-8.4": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 11 }],
+  "PHY-8.5": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 11 }],
+  "PHY-8.6": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 11 }],
+  "PHY-8.7": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 11 }],
+  "PHY-8.8": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 11 }],
+  "PHY-8.9": [{ boardCode: "FBISE", grade: 12, chapterNumber: 1 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 11 }],
+  "PHY-9.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 2 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 12 }],
+  "PHY-9.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 2 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 12 }],
+  "PHY-9.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 2 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 12 }],
+  "PHY-9.4": [{ boardCode: "FBISE", grade: 12, chapterNumber: 2 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 12 }],
+  "PHY-9.5": [{ boardCode: "FBISE", grade: 12, chapterNumber: 2 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 12 }],
+  "PHY-10.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 3 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 13 }],
+  "PHY-10.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 3 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 13 }],
+  "PHY-10.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 3 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 13 }],
+  "PHY-10.4": [{ boardCode: "FBISE", grade: 12, chapterNumber: 3 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 13 }],
+  "PHY-11.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 4 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 14 }],
+  "PHY-11.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 4 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 14 }],
+  "PHY-11.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 4 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 14 }],
+  "PHY-11.4": [{ boardCode: "FBISE", grade: 12, chapterNumber: 4 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 14 }],
+  "PHY-12.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 5 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 15 }],
+  "PHY-12.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 5 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 15 }],
+  "PHY-12.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 5 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 15 }],
+  "PHY-13.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 7 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 17 }],
+  "PHY-13.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 7 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 17 }],
+  "PHY-14.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 8 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 18 }],
+  "PHY-15.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 9 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 19 }],
+  "PHY-16.1": [{ boardCode: "FBISE", grade: 12, chapterNumber: 10 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 20 }],
+  "PHY-16.2": [{ boardCode: "FBISE", grade: 12, chapterNumber: 10 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 20 }],
+  "PHY-16.3": [{ boardCode: "FBISE", grade: 12, chapterNumber: 10 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 20 }],
+  "PHY-16.4": [{ boardCode: "FBISE", grade: 12, chapterNumber: 10 }, { boardCode: "BALOCHISTAN", grade: 12, chapterNumber: 20 }],
+};

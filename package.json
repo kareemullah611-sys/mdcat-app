@@ -20,6 +20,7 @@
     "syllabus:seed:pmdc-2025": "tsx scripts/seed-mdcat-syllabus-2025.ts",
     "mcq:pilot:biology-11": "tsx scripts/import-biology-11-pilot.ts",
     "mcq:pilot:subjects": "tsx scripts/import-subject-pilots.ts",
+    "mcq:bank:import": "tsx scripts/import-mcq-bank.ts",
     "test": "vitest run"
   },
   "prisma": {

@@ -5,6 +5,7 @@ import {
   MDCAT_2025_OFFICIAL_TOTALS,
   type CurriculumOutcome,
 } from "@/lib/data/mdcat-2025-curriculum";
+import { subjectOutcomes } from "@/lib/data/mcq-bank/coverage";
 
 const SUBJECTS = ["BIOLOGY", "CHEMISTRY", "PHYSICS"] as const;
 
@@ -81,6 +82,13 @@ describe("PMDC MDCAT 2025 curriculum inventory", () => {
       for (const numbers of perUnit.values()) {
         expect(numbers.sort((a, b) => a - b)).toEqual(Array.from({ length: numbers.length }, (_, index) => index + 1));
       }
+    }
+  });
+
+  it("only references outcomes that exist in the curriculum module (§22)", () => {
+    for (const subject of SUBJECTS) {
+      const known = new Set(MDCAT_2025_OUTCOMES[subject].map((outcome) => outcome.code));
+      for (const code of subjectOutcomes(subject)) expect(known.has(code)).toBe(true);
     }
   });
 
