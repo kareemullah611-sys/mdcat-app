@@ -3,6 +3,11 @@ import { access } from "node:fs/promises";
 import { resolveTextbookFile } from "../lib/textbook-storage";
 
 const prisma = new PrismaClient();
+
+// See scripts/import-fbise-books.ts: --metadata-only registers books and
+// chapters without the PDFs, so the question bank can be seeded on a host that
+// ships no copyrighted textbook files (spec §84).
+const metadataOnly = process.argv.includes("--metadata-only");
 const sourceLabel = "Balochistan Textbook Board, Quetta. Local educational copy; redistribution rights must be verified before production publication.";
 const books = [
   { grade: 11, subject: "BIOLOGY", file: "balochistan-biology-11.pdf", title: "Biology Grade XI", chapters: ["Cell Structure and Function", "Stem Cell and Cell Cycle", "Biological Molecules", "Enzymes", "Bioenergetics", "Acellular Life", "Prokaryotes", "Protists and Fungi", "Diversity Among Plants", "Form and Functions in Plants", "Biodiversity of Animals", "Chromosome and DNA", "Evolution", "Ecology"], chapterPages: [[5, 37], [38, 50], [51, 90], [91, 107], [108, 138], [139, 162], [163, 192], [193, 219], [220, 239], [240, 283], [284, 317], [318, 355], [356, 370], [371, 406]] },
@@ -26,7 +31,11 @@ async function main() {
   for (const item of books) {
     const filePath = resolveTextbookFile(item.file);
     if (!filePath) throw new Error(`Invalid file key: ${item.file}`);
-    await access(filePath);
+    if (!metadataOnly) {
+      await access(filePath);
+    } else {
+      console.log(`  ${item.file} not required (--metadata-only): the reader will be unavailable for this book.`);
+    }
     const schoolClass = await prisma.schoolClass.findUniqueOrThrow({ where: { grade: item.grade } });
     const subject = await prisma.subject.findUniqueOrThrow({ where: { code: item.subject } });
     let book = await prisma.book.findFirst({ where: { boardId: board.id, classId: schoolClass.id, subjectId: subject.id, title: item.title } });

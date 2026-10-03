@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { testFilterSchema, type TestFilterInput } from "@/lib/schemas";
 import { Button, ChipToggle, Field, Input, Select, Card } from "@/components/ui";
-import { DIFFICULTIES, QUESTION_TYPES, SOURCE_TYPES } from "@/lib/constants";
+import { DIFFICULTIES, QUESTION_TYPES, SOURCE_TYPES, type TestScope } from "@/lib/constants";
 import type { Board, SchoolClass, Subject } from "@prisma/client";
 
 export type BuilderContext = {
@@ -24,8 +24,14 @@ type Props = {
 export function TestBuilder({ context, defaultMode = "PRACTICE", defaults, compact = false }: Props) {
   const router = useRouter();
   const [mode, setMode] = useState<"PRACTICE" | "EXAM">(defaultMode);
+  const [scope, setScope] = useState<TestScope>(defaults?.scope ?? "BOARD");
   const [boardIds, setBoardIds] = useState<string[]>(defaults?.boardIds ?? [context.boards[0]?.id ?? ""].filter(Boolean));
   const [classIds, setClassIds] = useState<string[]>(defaults?.classIds ?? [context.classes[0]?.id ?? ""].filter(Boolean));
+  // An MDCAT paper spans the whole syllabus, so it defaults to both years
+  // (no class filter) rather than the first year (§74).
+  const [mdcatBothYears, setMdcatBothYears] = useState(
+    (defaults?.scope ?? "BOARD") === "MDCAT" ? (defaults?.classIds ?? []).length === 0 : false,
+  );
   const [subjectIds, setSubjectIds] = useState<string[]>(defaults?.subjectIds ?? []);
   const [chapterIds, setChapterIds] = useState<string[]>(defaults?.chapterIds ?? []);
   const [difficulties, setDifficulties] = useState<string[]>(defaults?.difficulties ?? []);
@@ -50,8 +56,10 @@ export function TestBuilder({ context, defaultMode = "PRACTICE", defaults, compa
     e.preventDefault();
     const payload: TestFilterInput = {
       mode,
-      boardIds,
-      classIds,
+      scope,
+      // An MDCAT paper is drawn from the syllabus, so boards do not gate it.
+      boardIds: scope === "BOARD" ? boardIds : [],
+      classIds: scope === "MDCAT" && mdcatBothYears ? [] : classIds,
       subjectIds,
 chapterIds,
       topicIds: [],
@@ -112,20 +120,67 @@ chapterIds,
       )}
 
       <Card className="space-y-6">
-        <Field label="Boards" hint="Select one or more boards — cross-board tests combine them.">
-          <ChipToggle
-            options={context.boards.map((b) => ({ value: b.id, label: b.name.split(" / ")[0] }))}
-            selected={boardIds}
-            onChange={setBoardIds}
-          />
+        <Field label="Syllabus scope" hint="MDCAT draws every question mapped to the current MDCAT syllabus, whichever board wrote it.">
+          <Select
+            value={scope}
+            onChange={(e) => {
+              const next = e.target.value as TestScope;
+              setScope(next);
+              if (next === "MDCAT") {
+                setChapterIds([]);
+                setMdcatBothYears(true);
+              } else {
+                setMdcatBothYears(false);
+                if (classIds.length === 0 && context.classes[0]) setClassIds([context.classes[0].id]);
+              }
+            }}
+          >
+            <option value="BOARD">My board&apos;s textbooks</option>
+            <option value="MDCAT">MDCAT syllabus (all boards)</option>
+          </Select>
         </Field>
 
-        <Field label="Classes">
-          <ChipToggle
-            options={context.classes.map((c) => ({ value: c.id, label: c.name }))}
-            selected={classIds}
-            onChange={setClassIds}
-          />
+        {scope === "BOARD" ? (
+          <Field label="Boards" hint="Select one or more boards — cross-board tests combine them.">
+            <ChipToggle
+              options={context.boards.map((b) => ({ value: b.id, label: b.name.split(" / ")[0] }))}
+              selected={boardIds}
+              onChange={setBoardIds}
+            />
+          </Field>
+        ) : (
+          <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-800">
+            This paper uses the PMDC MDCAT 2025 syllabus, so it includes questions from every board — including ones your
+            own board has not published.
+          </p>
+        )}
+
+        <Field
+          label="Classes"
+          hint={
+            scope === "MDCAT"
+              ? mdcatBothYears
+                ? "Whole syllabus — both years, as MDCAT tests."
+                : "Pick the year(s) to restrict the paper to."
+              : undefined
+          }
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            {scope === "MDCAT" ? (
+              <label className="flex items-center gap-2 rounded-full border border-slate-300 px-3 py-1 text-sm">
+                <input type="checkbox" checked={mdcatBothYears} onChange={(e) => setMdcatBothYears(e.target.checked)} />
+                Both years
+              </label>
+            ) : null}
+            <ChipToggle
+              options={context.classes.map((c) => ({ value: c.id, label: c.name }))}
+              selected={mdcatBothYears && scope === "MDCAT" ? [] : classIds}
+              onChange={(next) => {
+                setClassIds(next);
+                if (next.length > 0) setMdcatBothYears(false);
+              }}
+            />
+          </div>
         </Field>
 
         <Field label="Subjects">
@@ -136,15 +191,17 @@ chapterIds,
           />
         </Field>
 
-        <Field label="Specific chapters" hint="Optional — pick chapters or leave empty for all chapters.">
-          <div className="max-h-40 overflow-auto rounded-lg border border-slate-200 p-2">
-            {chapterOptions.length === 0 ? (
-              <p className="px-1 py-2 text-sm text-slate-400">Select subjects to see chapters.</p>
-            ) : (
-              <ChipToggle options={chapterOptions.slice(0, 60)} selected={chapterIds} onChange={setChapterIds} />
-            )}
-          </div>
-        </Field>
+        {scope === "BOARD" ? (
+          <Field label="Specific chapters" hint="Optional — pick chapters or leave empty for all chapters.">
+            <div className="max-h-40 overflow-auto rounded-lg border border-slate-200 p-2">
+              {chapterOptions.length === 0 ? (
+                <p className="px-1 py-2 text-sm text-slate-400">Select subjects to see chapters.</p>
+              ) : (
+                <ChipToggle options={chapterOptions.slice(0, 60)} selected={chapterIds} onChange={setChapterIds} />
+              )}
+            </div>
+          </Field>
+        ) : null}
 
         <div className="grid gap-6 sm:grid-cols-2">
           <Field label="Difficulty" hint="Empty = all levels.">

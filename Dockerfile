@@ -39,6 +39,10 @@ COPY --chown=node:node --from=build /app/public ./public
 COPY --chown=node:node --from=build /app/next.config.ts ./next.config.ts
 COPY --chown=node:node --from=build /app/tsconfig.json ./tsconfig.json
 COPY --chown=node:node --from=build /app/prisma ./prisma
+# Prisma CLI config (schema path, migrations path, seed command). Copied
+# explicitly because the runner stage does not take the repository root, and
+# `prisma migrate deploy` runs at container start.
+COPY --chown=node:node --from=build /app/prisma.config.ts ./prisma.config.ts
 # Keep reviewed maintenance commands available for one-off Railway SSH runs.
 COPY --chown=node:node --from=build /app/scripts ./scripts
 COPY --chown=node:node --from=build /app/lib ./lib

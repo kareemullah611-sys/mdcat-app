@@ -22,7 +22,9 @@ export default async function ExamsPage() {
         subtitle="Timed, examination-mode papers with no feedback until submission."
       />
 
-      <TestBuilder context={context} defaultMode="EXAM" />
+      {/* An exam defaults to the MDCAT syllabus: it is the same paper for every
+          board, so a Punjab profile is not starved of questions (§3 MODE B). */}
+      <TestBuilder context={context} defaultMode="EXAM" defaults={{ scope: "MDCAT", boardIds: [] }} />
 
       <div className="mt-10">
         <h2 className="mb-3 font-semibold">Exam history</h2>

@@ -23,9 +23,6 @@
     "mcq:bank:import": "tsx scripts/import-mcq-bank.ts",
     "test": "vitest run"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "@tailwindcss/postcss": "^4",
@@ -46,6 +43,7 @@
   },
   "devDependencies": {
     "@types/qrcode": "^1.5.6",
+    "dotenv": "^16.6.1",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "vitest": "^4.1.11"

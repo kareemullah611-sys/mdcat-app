@@ -1,14 +1,88 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { TestFilterInput } from "@/lib/schemas";
+import { MDCAT_SYLLABUS_CODE, type TestScope } from "@/lib/constants";
 import { balancedSample, randomOptionOrder, scoreSubmission, type SubmittedAnswer } from "@/lib/exam-core";
 
 export class EmptyPoolError extends Error {
   code = "EMPTY" as const;
-  constructor() {
-    super("No questions match these filters. Try widening the filters.");
+  constructor(scope: TestScope = "BOARD") {
+    super(
+      scope === "BOARD"
+        ? "No questions match these filters. Try widening them, or switch the scope to the MDCAT syllabus."
+        : "No questions match these filters for the current MDCAT syllabus. Try widening them.",
+    );
     this.name = "EmptyPoolError";
   }
+}
+
+/**
+ * Spec §74 steps 1-3: resolve the syllabus for MDCAT scope, then find eligible
+ * questions.
+ *
+ * The two scopes differ in what decides eligibility:
+ *
+ *  - BOARD  (§3 MODE A) — the question's board or one of its cross-board
+ *    mappings names a selected board. Chapter/topic narrow within that.
+ *  - MDCAT  (§3 MODE B) — the question is mapped to a learning outcome in the
+ *    current MDCAT syllabus, whatever board it was written against. Boards stay
+ *    selectable in the UI but must not gate the pool: Punjab, Sindh and KPK
+ *    have no chapters mapped to the bank, so a board filter here would return
+ *    an empty paper for exactly the students who most need the syllabus.
+ *
+ * Extracted from buildTest so the pool can be asserted without a database.
+ */
+export function buildQuestionWhere(
+  input: TestFilterInput,
+  options: {
+    /** Id of the MDCAT syllabus version, resolved by the caller. */
+    mdcatSyllabusVersionId?: string | null;
+    /** Question ids from the student's history preference (§28). */
+    historyIds?: { exclude?: string[]; include?: string[] };
+  } = {},
+): Prisma.QuestionWhereInput {
+  const where: Prisma.QuestionWhereInput = { status: "PUBLISHED" };
+
+  if (input.subjectIds.length > 0) where.subjectId = { in: input.subjectIds };
+
+  // A question taught in more than one year carries a mapping per year, so the
+  // class filter accepts either its own class or a mapped one (§72).
+  if (input.classIds.length > 0) {
+    where.AND = [
+      {
+        OR: [
+          { classId: { in: input.classIds } },
+          { mappings: { some: { schoolClassId: { in: input.classIds } } } },
+        ],
+      },
+    ];
+  }
+
+  if (input.scope === "MDCAT") {
+    if (options.mdcatSyllabusVersionId) {
+      where.mappings = {
+        some: { syllabusOutcome: { syllabusVersionId: options.mdcatSyllabusVersionId } },
+      };
+    }
+    // Chapters are board textbooks, so they do not narrow an MDCAT paper; a
+    // selected board must not empty it either.
+  } else {
+    // Cross-board: a question matches if its own board OR a mapping row says so (§72).
+    where.OR = [{ boardId: { in: input.boardIds } }, { mappings: { some: { boardId: { in: input.boardIds } } } }];
+    // These narrow the pool, so they must AND with the board rather than widen it.
+    if (input.chapterIds.length > 0) where.chapterId = { in: input.chapterIds };
+    if (input.topicIds.length > 0) where.topicId = { in: input.topicIds };
+  }
+
+  if (input.difficulties.length > 0) where.difficulty = { in: input.difficulties };
+  if (input.questionTypes.length > 0) where.questionType = { in: input.questionTypes };
+  if (input.sourceTypes.length > 0) where.sourceType = { in: input.sourceTypes };
+  if (input.minRelevance > 0) where.mdcatRelevanceScore = { gte: input.minRelevance };
+
+  if (options.historyIds?.exclude) where.id = { notIn: options.historyIds.exclude };
+  if (options.historyIds?.include) where.id = { in: options.historyIds.include };
+
+  return where;
 }
 
 /**
@@ -17,23 +91,6 @@ export class EmptyPoolError extends Error {
  * order). One `Test` row reused across all future modes (practice/exam/past/mock).
  */
 export async function buildTest(userId: string, input: TestFilterInput) {
-  const where: Prisma.QuestionWhereInput = { status: "PUBLISHED" };
-
-  // Cross-board: a question matches if its own board OR a mapping row says so (§72).
-  where.OR = [
-    { boardId: { in: input.boardIds } },
-    { mappings: { some: { boardId: { in: input.boardIds } } } },
-  ];
-
-  if (input.subjectIds.length > 0) where.subjectId = { in: input.subjectIds };
-  if (input.classIds.length > 0) where.classId = { in: input.classIds };
-  if (input.chapterIds.length > 0) where.OR.push({ chapterId: { in: input.chapterIds } });
-  if (input.topicIds.length > 0) where.OR.push({ topicId: { in: input.topicIds } });
-  if (input.difficulties.length > 0) where.difficulty = { in: input.difficulties };
-  if (input.questionTypes.length > 0) where.questionType = { in: input.questionTypes };
-  if (input.sourceTypes.length > 0) where.sourceType = { in: input.sourceTypes };
-  if (input.minRelevance > 0) where.mdcatRelevanceScore = { gte: input.minRelevance };
-
   // History preference (§28): derive attempt sets from the durable log.
   const history = await prisma.answerHistory.findMany({
     where: { userId },
@@ -42,17 +99,28 @@ export async function buildTest(userId: string, input: TestFilterInput) {
   const everAnswered = new Set(history.map((h) => h.questionId));
   const incorrectIds = new Set(history.filter((h) => !h.isCorrect).map((h) => h.questionId));
 
+  let historyIds: { exclude?: string[]; include?: string[] } | undefined;
+  let bookmarkIds: string[] | undefined;
   if (input.historyFilter === "NEVER_ATTEMPTED" && everAnswered.size > 0) {
-    where.NOT = { id: { in: [...everAnswered] } };
+    historyIds = { exclude: [...everAnswered] };
   } else if (input.historyFilter === "INCORRECT") {
-    where.id = { in: [...incorrectIds] };
+    historyIds = { include: [...incorrectIds] };
   } else if (input.historyFilter === "BOOKMARKED") {
     const bookmarks = await prisma.bookmark.findMany({
       where: { userId, targetType: "QUESTION" },
       select: { targetId: true },
     });
-    where.id = { in: bookmarks.map((b) => b.targetId) };
+    bookmarkIds = bookmarks.map((b) => b.targetId);
+    historyIds = { include: bookmarkIds };
   }
+
+  // MDCAT scope resolves the syllabus version the paper is drawn from (§74 step 2).
+  const syllabus =
+    input.scope === "MDCAT"
+      ? await prisma.syllabusVersion.findUnique({ where: { code: MDCAT_SYLLABUS_CODE }, select: { id: true } })
+      : null;
+
+  const where = buildQuestionWhere(input, { mdcatSyllabusVersionId: syllabus?.id ?? null, historyIds });
 
   const candidates = await prisma.question.findMany({
     where,
@@ -60,7 +128,7 @@ export async function buildTest(userId: string, input: TestFilterInput) {
   });
 
   if (candidates.length === 0) {
-    throw new EmptyPoolError();
+    throw new EmptyPoolError(input.scope);
   }
 
   const selected = balancedSample(
@@ -81,6 +149,7 @@ export async function buildTest(userId: string, input: TestFilterInput) {
       data: {
         userId,
         mode: input.mode,
+        scope: input.scope,
         boardIds: input.boardIds,
         classIds: input.classIds,
         subjectIds: input.subjectIds,

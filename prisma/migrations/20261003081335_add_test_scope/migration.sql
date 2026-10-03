@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Test" ADD COLUMN     "scope" TEXT NOT NULL DEFAULT 'BOARD';

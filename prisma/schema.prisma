@@ -42,6 +42,11 @@ model User {
   twoFactors       TwoFactor[]
 
   @@index([roleId])
+  // Serves Better Auth's plain `WHERE username = ?` sign-in lookup, which the
+  // functional LOWER(username) unique index cannot answer. Named to match the
+  // index the add_username migration created, so declaring it here closes the
+  // schema/DB drift instead of renaming or dropping it.
+  @@index([username], map: "User_username_lookup_idx")
 }
 
 model TwoFactor {
@@ -382,6 +387,7 @@ model Test {
   id               String    @id @default(cuid())
   userId           String
   mode             String    @default("PRACTICE") // PRACTICE|EXAM|PAST_PAPER|MOCK
+  scope            String    @default("BOARD") // BOARD|MDCAT — which syllabus drew the questions (§3)
   boardIds         String[] // filter snapshot (rows preserved)
   classIds         String[]
   subjectIds       String[]

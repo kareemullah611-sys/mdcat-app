@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { INPUT_LIMITS } from "@/lib/input-limits";
-import { DIFFICULTIES, HISTORY_FILTERS, QUESTION_TYPES, QUESTION_STATUS, SOURCE_TYPES, TEST_MODES } from "@/lib/constants";
+import { DIFFICULTIES, HISTORY_FILTERS, QUESTION_TYPES, QUESTION_STATUS, SOURCE_TYPES, TEST_MODES, TEST_SCOPES } from "@/lib/constants";
 
 export const letters = ["A", "B", "C", "D", "E", "F"] as const;
 export const letterFor = (index: number): string =>
@@ -14,8 +14,15 @@ const option = z.object({
 
 export const testFilterSchema = z.object({
   mode: z.enum(TEST_MODES).default("PRACTICE"),
-  boardIds: z.array(identifier).min(1, "Select at least one board").max(5),
-  classIds: z.array(identifier).min(1, "Select at least one class").max(2),
+  scope: z.enum(TEST_SCOPES).default("BOARD"),
+  // Board scope needs at least one board; MDCAT scope deliberately ignores
+  // boards, so an empty list is valid there (a Punjab profile has no mapped
+  // chapters and must still be able to sit a syllabus paper).
+  boardIds: z.array(identifier).max(5).default([]),
+  // Empty = both years. An MDCAT paper covers the whole syllabus, not one class
+  // (§3 MODE B, §74 "Both Years → Current MDCAT Syllabus"); board practice is
+  // class-specific, so it requires a selection.
+  classIds: z.array(identifier).max(2).default([]),
   subjectIds: z.array(identifier).min(1, "Select at least one subject").max(10),
   chapterIds: z.array(identifier).max(100).optional().default([]),
   topicIds: z.array(identifier).max(200).optional().default([]),
@@ -26,7 +33,19 @@ export const testFilterSchema = z.object({
   historyFilter: z.enum(HISTORY_FILTERS).optional().default("MIXED"),
   count: z.number().int().min(1).max(300).default(10),
   timeLimitSeconds: z.number().int().min(0).optional().nullable().default(null), // 0/null = untimed
-}).strict();
+})
+  .strict()
+  .superRefine((value, ctx) => {
+    // Board scope is defined by its board and class, so an empty selection is a
+    // user error there rather than "everything" (§3 MODE A).
+    if (value.scope !== "BOARD") return;
+    if (value.boardIds.length === 0) {
+      ctx.addIssue({ code: "custom", path: ["boardIds"], message: "Select at least one board" });
+    }
+    if (value.classIds.length === 0) {
+      ctx.addIssue({ code: "custom", path: ["classIds"], message: "Select at least one class" });
+    }
+  });
 
 export type TestFilterInput = z.infer<typeof testFilterSchema>;
 

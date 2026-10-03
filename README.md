@@ -35,6 +35,7 @@ cp .env.example .env
 createdb mdcat_app
 
 # 4. Apply migrations and seed reference data
+#    (Prisma reads .env through prisma.config.ts, so no export is needed)
 npx prisma migrate deploy
 npm run db:seed
 
@@ -79,6 +80,7 @@ npm run db:migrate   # prisma migrate dev (for schema changes)
 
 ```
 prisma/            schema.prisma, migrations, seed.ts
+prisma.config.ts   Prisma CLI config (schema/migrations paths + seed command); reads .env
 lib/               auth, prisma client, schemas, exam engine, test service, constants
 lib/data/          mdcat-2025-curriculum.ts (official syllabus outcomes), mcq-bank/ (authored MCQs + coverage maps)
 components/        shared UI + practice/exam runners + admin forms + SW registration
@@ -100,6 +102,31 @@ The app is installable (V1 is a responsive installable PWA). Web app manifest is
 - **Test** + **TestQuestion** are immutable snapshots. `optionOrder` is stored per question so a re-render never reshuffles a student's exam.
 - **AnswerHistory** is the durable per-attempt log used for scoring, streaks, and mistake-review.
 - MDCAT scoring: +1 correct, −0.25 incorrect, 0 unanswered (see `lib/exam-core.ts`).
+
+## Two scopes: your board vs the MDCAT syllabus
+
+The question pool is scoped in one of two ways, and the student picks it in the
+test builder ("Syllabus scope"). The distinction is the difference between
+spec §3 MODE A and MODE B:
+
+| Scope | Pool is decided by | Use it for |
+| --- | --- | --- |
+| **My board's textbooks** (`BOARD`) | the question's board, or a cross-board mapping naming a selected board; chapters narrow within that | board-exam prep, chapter drills |
+| **MDCAT syllabus** (`MDCAT`) | the question being mapped to a learning outcome in the current MDCAT syllabus, **whatever board wrote it** | MDCAT papers |
+
+Boards stay selectable in MDCAT scope, but they deliberately do **not** gate the
+pool: the authored bank is mapped to FBISE and Balochistan, so a Punjab, Sindh
+or KPK profile would otherwise get an empty paper from exactly the students who
+most need the syllabus. In MDCAT scope a paper also spans **both years** by
+default ("Both years"), matching MDCAT's own coverage.
+
+- `/practice` defaults to `BOARD` and warns when the student's board and class
+  have too few mapped questions, pointing at `/exams`.
+- `/exams` defaults to `MDCAT`.
+- The scope is snapshotted on the `Test` row, so a historical paper records what
+  it was drawn from.
+- Selecting chapters narrows the pool. Chapter and topic filters are `AND`-ed
+  with the board, not `OR`-ed into it.
 
 **Integrity rule:** correct answer keys never reach the browser. Exams are evaluated server-side at submit (`POST /api/tests/[testId]/submit`); practice sends per-question answers (`POST /api/tests/[testId]/answer`) and receives correctness feedback.
 
@@ -137,6 +164,13 @@ npm run mcq:bank:import -- --publish       # or straight to PUBLISHED (student-v
 npm test
 ```
 
+**Or load it from the admin UI**, which runs the same importer in the background
+and is the supported path for a deployed instance: sign in as an admin, open
+**Admin → Load bank**, run a dry run, then load and publish. A load takes a few
+minutes; the page polls its own progress, and only one load may run at a time.
+Because the questions ship inside the deploy image, a deployed instance needs no
+file transfer — the endpoint is `POST /api/admin/mcq-bank`.
+
 **Useful flags:** `--dry-run` (report only, write nothing), `--subject=BIOLOGY`,
 `--grade=12`, `--batch=chem-xi-b2`. Run the whole bank again any time — imports
 upsert on `generationKey`, so it is idempotent.
@@ -147,7 +181,9 @@ chapter that doesn't exist for that board/class/subject; a page range that
 disagrees with the imported book; a batch that isn't exactly 100 questions at
 15 easy / 70 medium / 15 hard; more than 40 % of a batch's answers in one option
 position; duplicate or near-duplicate stems; and any practical/experimental
-question type.
+question type. Every outcome cited by a **selected** batch is checked against the
+seeded syllabus before the first batch is written, so a missing syllabus seed
+fails the run outright instead of leaving a partly-loaded bank behind.
 
 Statuses follow spec §98: `VALIDATED` questions are visible to admins only,
 `PUBLISHED` questions are drawable by the practice and exam engines
@@ -199,7 +235,31 @@ Deploy config is committed in `railway.json` (builder `DOCKERFILE` pointing at t
    railway ssh -s web 'cd /app && node_modules/.bin/tsx scripts/seed-mdcat-syllabus-2025.ts'
    railway ssh -s web 'cd /app && node_modules/.bin/tsx scripts/import-mcq-bank.ts --publish'
    ```
-   All four are idempotent, so re-running is safe after each deploy. In production the PDFs should come from object storage mounted at `TEXTBOOK_STORAGE_DIR` rather than the repository.
+   All four are idempotent, so re-running is safe after each deploy.
+
+   **Prefer the admin UI.** Once the code below is deployed, the bank can be
+   loaded without shell access: **Admin → Load bank** → dry run → *Load and
+   publish*. It runs the same importer in the background, refuses a second
+   concurrent load, and reports per-batch progress. The commands above remain the
+   option for a server with no admin sign-in.
+
+   **Textbook PDFs.** They are 1.7 GB and gitignored, so they are not in the
+   deploy image — production serves them from a Railway **volume** mounted at
+   `/data/textbooks` (`TEXTBOOK_STORAGE_DIR`, the entrypoint default). If books
+   are already registered in a given database, skip step 5's importers entirely
+   and run only the syllabus and bank steps.
+
+   For a database that has the books' chapters missing and no PDF volume (a fresh
+   dev DB, CI), the book importers take `--metadata-only`: they register books and
+   chapters from their declarative lists without touching the filesystem, which is
+   enough for the question pipeline since only the **reader** needs the files:
+   ```bash
+   railway ssh -s web 'cd /app && node_modules/.bin/tsx scripts/import-fbise-books.ts --metadata-only'
+   railway ssh -s web 'cd /app && node_modules/.bin/tsx scripts/import-balochistan-books.ts --metadata-only'
+   ```
+   Always run the book importers (with or without `--metadata-only`) **before** the
+   syllabus and bank steps — the question importer rejects any source chapter that
+   is not already registered.
 6. Deploy. The web service will open with `BETTER_AUTH_URL` as its own domain.
 
 ### Deprecation note (Config-as-Code → IaC)
@@ -215,11 +275,14 @@ Railway deprecates `railway.json`/`.railway.toml` in favour of `.railway/railway
 - [ ] Migrations applied — recommended via dashboard Pre-deploy command (`npx prisma migrate deploy`); see "Migrations" above
 - [ ] `railway.json` committed (build/start/healthcheck are read from it)
 - [ ] Admin created via seed; change the default admin password after first login
-- [ ] Textbook PDFs available at `TEXTBOOK_STORAGE_DIR`, books imported, syllabus seeded, question bank imported (`--publish`) — otherwise students get no questions
+- [ ] Textbook PDFs available at `TEXTBOOK_STORAGE_DIR`, books imported, syllabus seeded, question bank imported (**Admin → Load bank**, or `--publish`) — otherwise students get no questions
+- [ ] Board coverage is understood: the bank is mapped to FBISE and Balochistan only. Punjab/Sindh/KPK profiles get a thin board-practice pool and an amber notice pointing them at the MDCAT syllabus scope. Mapping real Punjab textbook chapters is future content work, not a bug
 
 ## Notes / gotchas
 
 - **Next.js 16** uses `next dev`/`next build` under Turbopack; route `params` are Promises in the App Router, handled throughout.
 - **Prisma pinned at 6.x.** Do not upgrade to Prisma 7 without an ADR — its driver-adapter architecture changes how the client connects.
+- **Prisma config lives in `prisma.config.ts`**, not `package.json#prisma` (deprecated, removed in Prisma 7). Two traps: (1) a config file **disables** Prisma's automatic `.env` loading, which is why the file imports `dotenv/config` — `prisma/schema.prisma` still resolves `env("DATABASE_URL")`; (2) the Dockerfile's runner stage copies files individually, so `prisma.config.ts` must be listed there too, or `prisma migrate deploy` at container start loses the schema/migrations paths and the seed command.
+- **The bank loader's job state is in process memory.** `lib/mcq-bank-job.ts` holds the running/finished status in a module variable, which is correct for the single long-running Node service on Railway but is lost if the container restarts mid-load. The import itself is idempotent, so re-running after a restart is the recovery path.
 - **AI generation** (phases beyond 1) must not be started until the foundation + question engine are complete (spec §105).
 - There is currently no `middleware.ts` — authentication gating happens at the app level via `requireProfile()`/`requireAdmin()` in `lib/session.ts`.

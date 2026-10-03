@@ -63,6 +63,18 @@ export type ContentStatus = (typeof CONTENT_STATUS)[number];
 export const TEST_MODES = ["PRACTICE", "EXAM", "PAST_PAPER", "MOCK"] as const;
 export type TestMode = (typeof TEST_MODES)[number];
 
+// Which syllabus a test is drawn from (spec MODE A / MODE B).
+// BOARD  - the student's board textbooks and their questions.
+// MDCAT  - the current MDCAT syllabus and its learning outcomes, across every
+//          board, so a profile whose board has no mapped chapters (Punjab,
+//          Sindh, KPK) can still sit a full syllabus paper (§3 MODE B).
+export const TEST_SCOPES = ["BOARD", "MDCAT"] as const;
+export type TestScope = (typeof TEST_SCOPES)[number];
+
+// The MDCAT syllabus a MODE B paper is resolved against. Seeded by
+// scripts/seed-mdcat-syllabus-2025.ts.
+export const MDCAT_SYLLABUS_CODE = "PMDC_MDCAT_2025_FINAL";
+
 export const TEST_STATUS = ["IN_PROGRESS", "COMPLETED", "ABANDONED"] as const;
 export type TestStatus = (typeof TEST_STATUS)[number];
 

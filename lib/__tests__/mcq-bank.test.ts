@@ -14,6 +14,8 @@ import {
 import { OUTCOME_COVERAGE_ALL as OUTCOME_COVERAGE, gradeXiiSubjectOutcomes, gradeXiSubjectOutcomes } from "@/lib/data/mcq-bank/coverage-index";
 
 const SUBJECTS = ["BIOLOGY", "CHEMISTRY", "PHYSICS"] as const;
+/** Grounding + duplicate checks are O(n^2) over 500 questions per subject and class. */
+const BANK_CHECK_TIMEOUT = 60_000;
 const GRADES = [11, 12] as const;
 const pilotTexts = [...biology11Pilot, ...chemistryPilot, ...physicsPilot].map((question) => question.questionText);
 const answerPositionShare = (questions: { correctIndex: number }[], index: number) =>
@@ -34,7 +36,7 @@ describe("MCQ banks (Grade XI + Grade XII)", () => {
     for (const index of [0, 1, 2, 3]) {
       expect(answerPositionShare(batch.questions, index)).toBeLessThanOrEqual(0.4);
     }
-  });
+  }, BANK_CHECK_TIMEOUT);
 
   it.each(SUBJECTS)("%s stays inside the PMDC MDCAT 2025 coverage map", (subject) => {
     for (const grade of GRADES) {
@@ -68,7 +70,7 @@ describe("MCQ banks (Grade XI + Grade XII)", () => {
       expect(Object.keys(counts).sort()).toEqual([...expected].sort());
       expect(validateGroundedPilot(questions, pilotTexts)).toEqual([]);
     }
-  });
+  }, BANK_CHECK_TIMEOUT);
 
   it("maps each question only to chapters that really teach its outcome", () => {
     for (const subject of SUBJECTS) {
@@ -83,7 +85,7 @@ describe("MCQ banks (Grade XI + Grade XII)", () => {
         }
       }
     }
-  });
+  }, BANK_CHECK_TIMEOUT);
 
   it("gives every question a distinct stem opening within its subject and grade (§51)", () => {
     for (const subject of SUBJECTS) {
@@ -99,7 +101,7 @@ describe("MCQ banks (Grade XI + Grade XII)", () => {
         expect(Math.max(0, ...repeated)).toBeLessThanOrEqual(2);
       }
     }
-  });
+  }, BANK_CHECK_TIMEOUT);
 
   it("excludes practical and experimental question types (§4)", () => {
     const forbidden = ["PRACTICAL", "EXPERIMENTAL", "NUMERICAL", "DIAGRAM", "FORMULA"];

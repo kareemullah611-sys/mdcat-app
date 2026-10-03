@@ -3,6 +3,12 @@ import { access } from "node:fs/promises";
 import { resolveTextbookFile } from "../lib/textbook-storage";
 
 const prisma = new PrismaClient();
+
+// Register book/chapter metadata without requiring the PDFs to be present.
+// The questions pipeline only needs the chapter rows; the reader needs the
+// files. Lets production seed the bank from an image that ships no copyrighted
+// PDFs (spec §84) while the reader stays unavailable until a volume is mounted.
+const metadataOnly = process.argv.includes("--metadata-only");
 const sourceLabel = "Federal Board / FBISE curriculum copy supplied by the administrator. Some scanned covers retain Khyber Pakhtunkhwa Textbook Board branding; redistribution rights must be verified before public distribution.";
 
 const books = [
@@ -19,7 +25,11 @@ async function main() {
   for (const item of books) {
     const filePath = resolveTextbookFile(item.file);
     if (!filePath) throw new Error(`Invalid file key: ${item.file}`);
-    await access(filePath);
+    if (!metadataOnly) {
+      await access(filePath);
+    } else {
+      console.log(`  ${item.file} not required (--metadata-only): the reader will be unavailable for this book.`);
+    }
     const schoolClass = await prisma.schoolClass.findUniqueOrThrow({ where: { grade: item.grade } });
     const subject = await prisma.subject.findUniqueOrThrow({ where: { code: item.subject } });
     const existing = await prisma.book.findFirst({ where: { boardId: board.id, classId: schoolClass.id, subjectId: subject.id, title: item.title } });
