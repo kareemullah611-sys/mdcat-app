@@ -3,8 +3,34 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireProfile } from "@/lib/session";
 import { Badge, Card, Progress } from "@/components/ui";
+import { letterFor } from "@/lib/schemas";
 
 type RouteProps = { params: Promise<{ testId: string }> };
+
+type SnapshotQuestion = {
+  optionOrder: string[];
+  question: { options: { id: string; text: string }[] };
+};
+
+/**
+ * The options in the order the student actually saw them.
+ *
+ * `optionOrder` is the per-test shuffle stored on the snapshot; the relation's
+ * `order` column is the authoring order. They differ for nearly every test, so
+ * anything that reports "B" must resolve against this list. Falls back to the
+ * authoring order for snapshots recorded before the order was stored.
+ */
+function presentedOptions(tq: SnapshotQuestion): { id: string; text: string }[] {
+  if (tq.optionOrder.length > 0) {
+    const byId = new Map(tq.question.options.map((option) => [option.id, option]));
+    const ordered = tq.optionOrder
+      .map((id) => byId.get(id))
+      .filter((option): option is { id: string; text: string } => Boolean(option));
+    // Guard against a snapshot referencing an option that has since been removed.
+    if (ordered.length === tq.question.options.length) return ordered;
+  }
+  return tq.question.options;
+}
 
 export default async function TestResultPage({ params }: RouteProps) {
   const { user } = await requireProfile();
@@ -53,20 +79,24 @@ export default async function TestResultPage({ params }: RouteProps) {
   }
 
   // Per-chapter weak areas (only chapters with attempted questions)
-  const chapterMap = new Map<string, { label: string; attempted: number; correct: number }>();
+  const chapterMap = new Map<string, { id: string; label: string; attempted: number; correct: number }>();
   for (const tq of test.questions) {
     if (tq.isCorrect === null) continue;
     const ch = tq.question.chapter;
     if (!ch) continue;
     const label = `${tq.question.subject.name} → ${ch.title}`;
-    const e = chapterMap.get(ch.id) ?? { label, attempted: 0, correct: 0 };
+    const e = chapterMap.get(ch.id) ?? { id: ch.id, label, attempted: 0, correct: 0 };
     e.attempted++;
     if (tq.isCorrect) e.correct++;
     chapterMap.set(ch.id, e);
   }
+  // Only "weak" chapters belong under this heading: the previous filter had a
+  // lower bound on attempts but no ceiling on accuracy, so a chapter answered
+  // 100% correctly was listed as weak (with a green badge).
+  const WEAK_ACCURACY_BELOW = 70;
   const weakChapters = [...chapterMap.values()]
     .map((c) => ({ ...c, accuracy: Math.round((c.correct / c.attempted) * 100) }))
-    .filter((c) => c.attempted >= 2)
+    .filter((c) => c.attempted >= 2 && c.accuracy < WEAK_ACCURACY_BELOW)
     .sort((a, b) => a.accuracy - b.accuracy);
 
   const mistakes = test.questions.filter((q) => q.isCorrect === false);
@@ -140,7 +170,7 @@ export default async function TestResultPage({ params }: RouteProps) {
           ) : (
             <ul className="space-y-3">
               {weakChapters.slice(0, 5).map((c) => (
-                <li key={c.label}>
+                <li key={c.id}>
                   <div className="flex justify-between text-sm">
                     <span className="font-medium text-slate-800">{c.label}</span>
                     <Badge tone={c.accuracy >= 70 ? "green" : c.accuracy >= 50 ? "amber" : "red"}>
@@ -162,27 +192,47 @@ export default async function TestResultPage({ params }: RouteProps) {
           <h2 className="mb-3 font-semibold">Review mistakes ({mistakes.length})</h2>
           <ul className="space-y-3">
             {mistakes.map((tq) => {
+              // The runner showed the options in the snapshot's stored order
+              // (optionOrder, a per-test shuffle). Indexing the authoring order
+              // instead named a different option than the student clicked, and
+              // the hardcoded A-D array printed "—" for E/F options.
+              const presented = presentedOptions(tq);
               const correctOption = tq.question.options.find((o) => o.isCorrect);
               const selectedIndex = tq.selectedOptionId
-                ? tq.question.options.findIndex((o) => o.id === tq.selectedOptionId)
+                ? presented.findIndex((o) => o.id === tq.selectedOptionId)
                 : -1;
               const correctIndex = correctOption
-                ? tq.question.options.findIndex((o) => o.id === correctOption.id)
+                ? presented.findIndex((o) => o.id === correctOption.id)
                 : -1;
               return (
                 <li key={tq.id}>
                   <Card>
                     <p className="font-medium text-slate-900">{tq.question.questionText}</p>
-                    {selectedIndex >= 0 && (
-                      <p className="mt-1 text-xs text-red-700">
-                        Your answer: {["A", "B", "C", "D"][selectedIndex] ?? "—"}
-                      </p>
-                    )}
-                    {correctIndex >= 0 && (
-                      <p className="text-xs text-emerald-700">
-                        Correct answer: {["A", "B", "C", "D"][correctIndex] ?? "—"}
-                      </p>
-                    )}
+                    <ul className="mt-2 space-y-1">
+                      {presented.map((option, index) => {
+                        const isSelected = option.id === tq.selectedOptionId;
+                        const isCorrect = option.id === correctOption?.id;
+                        return (
+                          <li
+                            key={option.id}
+                            className={
+                              isCorrect
+                                ? "text-sm font-medium text-emerald-700"
+                                : isSelected
+                                  ? "text-sm font-medium text-red-700"
+                                  : "text-sm text-slate-600"
+                            }
+                          >
+                            {letterFor(index)}. {option.text}
+                            {isCorrect ? " — correct answer" : isSelected ? " — your answer" : ""}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <p className="mt-2 text-xs text-slate-500">
+                      Your answer: {selectedIndex >= 0 ? letterFor(selectedIndex) : "not answered"} · Correct answer:{" "}
+                      {correctIndex >= 0 ? letterFor(correctIndex) : "—"}
+                    </p>
                     {tq.question.explanation ? (
                       <p className="mt-2 text-sm leading-6 text-slate-600">{tq.question.explanation}</p>
                     ) : null}

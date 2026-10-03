@@ -11,14 +11,27 @@ export type SubjectStat = {
   accuracy: number; // 0-100, 0 when no attempts
 };
 
-export type TopicStat = {
-  topicId: string;
-  topicTitle: string;
+/**
+ * A grouped weakness. The authored bank is grounded in syllabus outcomes and
+ * textbook chapters but carries no `topicId`, so a topic-only grouping silently
+ * discarded all 3,000 of them and left "weak areas" permanently empty. Grouping
+ * falls back to the chapter, which every bank question has.
+ */
+export type WeakArea = {
+  /** `topic:<id>` or `chapter:<id>` — stable identity for React keys. */
+  key: string;
+  kind: "topic" | "chapter";
+  label: string;
   subjectName: string;
   attempted: number;
   correct: number;
   accuracy: number;
 };
+
+/** Below this, a grouping is listed as a weak area; above it, it is not. */
+export const WEAK_ACCURACY_BELOW = 70;
+/** Fewer attempts than this is too small a sample to call weak. */
+export const WEAK_MIN_ATTEMPTS = 2;
 
 export type RecentTest = {
   id: string;
@@ -34,7 +47,7 @@ export type StudentStats = {
   overallCorrect: number;
   overallAccuracy: number;
   bySubject: SubjectStat[];
-  weakTopics: TopicStat[];
+  weakAreas: WeakArea[];
   recentTests: RecentTest[];
 };
 
@@ -49,6 +62,8 @@ export async function getStudentStats(userId: string): Promise<StudentStats> {
           subject: { select: { name: true } },
           topicId: true,
           topic: { select: { title: true } },
+          chapterId: true,
+          chapter: { select: { title: true } },
         },
       },
     },
@@ -60,7 +75,7 @@ export async function getStudentStats(userId: string): Promise<StudentStats> {
     overallAttempted === 0 ? 0 : Math.round((overallCorrect / overallAttempted) * 100);
 
   const bySubjectMap = new Map<string, { subjectId: string; subjectName: string; attempted: number; correct: number }>();
-  const topicBySubject = new Map<string, typeof attempts>();
+  const weakGroups = new Map<string, typeof attempts>();
 
   for (const a of attempts) {
     const subjectId = a.question.subjectId;
@@ -74,31 +89,41 @@ export async function getStudentStats(userId: string): Promise<StudentStats> {
     if (a.isCorrect) entry.correct++;
     bySubjectMap.set(subjectId, entry);
 
-    if (a.question.topicId) {
-      const key = `${subjectId}:${a.question.topicId}`;
-      const list = topicBySubject.get(key) ?? [];
-      list.push(a);
-      topicBySubject.set(key, list);
-    }
+    // Prefer the topic; fall back to the chapter for questions that have no
+    // topic, and drop the attempt only if it has neither.
+    const group = a.question.topicId
+      ? { key: `topic:${a.question.topicId}`, kind: "topic" as const, label: a.question.topic?.title ?? "Untitled topic" }
+      : a.question.chapterId
+        ? { key: `chapter:${a.question.chapterId}`, kind: "chapter" as const, label: a.question.chapter?.title ?? "Untitled chapter" }
+        : null;
+    if (!group) continue;
+    const list = weakGroups.get(group.key) ?? [];
+    list.push(a);
+    weakGroups.set(group.key, list);
   }
 
-  const topicStats: TopicStat[] = [...topicBySubject.entries()]
+  const weakAreas: WeakArea[] = [...weakGroups.entries()]
     .map(([key, list]) => {
-      const [, topicId] = key.split(":");
       const first = list[0];
       const attempted = list.length;
       const correct = list.filter((a) => a.isCorrect).length;
       return {
-        topicId,
-        topicTitle: first.question.topic?.title ?? "Untitled topic",
+        key,
+        kind: (key.startsWith("topic:") ? "topic" : "chapter") as "topic" | "chapter",
+        label: first.question.topicId
+          ? first.question.topic?.title ?? "Untitled topic"
+          : first.question.chapter?.title ?? "Untitled chapter",
         subjectName: first.question.subject.name,
         attempted,
         correct,
         accuracy: Math.round((correct / attempted) * 100),
       };
     })
-    .filter((t) => t.attempted >= 2) // only "known enough" topics count as weak/strong
-    .sort((a, b) => a.accuracy - b.accuracy);
+    // A group with too few attempts is not a reliable signal, and one the
+    // student is already strong in is not a weakness — the previous filter had
+    // only the lower bound, so 100% topics were listed as "weak areas".
+    .filter((area) => area.attempted >= WEAK_MIN_ATTEMPTS && area.accuracy < WEAK_ACCURACY_BELOW)
+    .sort((a, b) => a.accuracy - b.accuracy || b.attempted - a.attempted);
 
   const recentTests = await prisma.test.findMany({
     where: { userId, status: "COMPLETED" },
@@ -121,10 +146,25 @@ export async function getStudentStats(userId: string): Promise<StudentStats> {
       ...s,
       accuracy: s.attempted === 0 ? 0 : Math.round((s.correct / s.attempted) * 100),
     })),
-    weakTopics: topicStats,
+    weakAreas,
     recentTests: recentTests.map((t) => ({
       ...t,
       percent: t.totalQuestions === 0 ? 0 : Math.round(((t.score ?? 0) / t.totalQuestions) * 100),
     })),
   };
+}
+/** Human label for a test mode, so raw enum values never reach the UI. */
+export function testModeLabel(mode: string): string {
+  switch (mode) {
+    case "PRACTICE":
+      return "Practice session";
+    case "EXAM":
+      return "Timed exam";
+    case "MOCK":
+      return "Mock paper";
+    case "PAST_PAPER":
+      return "Past paper";
+    default:
+      return "Test";
+  }
 }

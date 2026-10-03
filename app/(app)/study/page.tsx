@@ -24,6 +24,29 @@ export default async function StudyPage() {
       />
 
       <div className="space-y-8">
+        {boards.every((board) => board.books.length === 0) ? (
+          <Card>
+            <p className="font-medium text-slate-900">No textbooks published yet</p>
+            <p className="mt-1 text-sm text-slate-600">
+              Board textbooks appear here once an admin publishes them. You can still practise and sit MDCAT papers in
+              the meantime.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link
+                href="/exams"
+                className="inline-flex h-10 items-center rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-700"
+              >
+                Take an MDCAT paper
+              </Link>
+              <Link
+                href="/practice"
+                className="inline-flex h-10 items-center rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-800 hover:bg-slate-100"
+              >
+                Practise MCQs
+              </Link>
+            </div>
+          </Card>
+        ) : null}
         {boards.map((board) => {
           if (board.books.length === 0) return null;
           return (

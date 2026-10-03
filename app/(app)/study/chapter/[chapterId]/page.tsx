@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { buildTextbookScopeWhere } from "@/lib/test-service";
 import { requireProfile } from "@/lib/session";
 import { Card } from "@/components/ui";
 
@@ -18,9 +19,19 @@ export default async function ChapterPage({ params }: RouteProps) {
     },
   });
   if (!chapter) notFound();
+  // A chapter of an unpublished book has no reader and no reachable practice,
+  // so it should not be viewable by direct link.
+  if (chapter.book.status !== "PUBLISHED") notFound();
 
+  // Counted with the same predicate the practice link applies (board + class on
+  // top of the chapter), so the advertised number is exactly what can be drawn.
   const questionCount = await prisma.question.count({
-    where: { chapterId, status: "PUBLISHED" },
+    where: buildTextbookScopeWhere({
+      subjectId: chapter.book.subjectId,
+      boardId: chapter.book.boardId,
+      classId: chapter.book.classId,
+      chapterIds: [chapterId],
+    }),
   });
 
   const startMultipleChoice = `/practice?chapter=${encodeURIComponent(chapterId)}&subject=${encodeURIComponent(chapter.book.subjectId)}&board=${encodeURIComponent(chapter.book.boardId)}&class=${encodeURIComponent(chapter.book.classId)}&count=10`;

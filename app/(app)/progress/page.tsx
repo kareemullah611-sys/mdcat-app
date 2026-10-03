@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireProfile } from "@/lib/session";
-import { getStudentStats } from "@/lib/stats";
+import { getStudentStats, testModeLabel } from "@/lib/stats";
 import { Badge, Card, PageHeader, Progress } from "@/components/ui";
 
 export default async function ProgressPage() {
@@ -56,17 +56,18 @@ export default async function ProgressPage() {
       </Card>
 
       <Card className="mt-6">
-        <h2 className="mb-4 font-semibold">Topics to revisit</h2>
-        {stats.weakTopics.length === 0 ? (
+        <h2 className="mb-4 font-semibold">Topics &amp; chapters to revisit</h2>
+        {stats.weakAreas.length === 0 ? (
           <p className="text-sm text-slate-500">
-            Answer at least two questions in a topic for a reliable weak-area signal.
+            Answer at least two questions in a topic or chapter for a reliable weak-area signal.
           </p>
         ) : (
           <ul className="space-y-3">
-            {stats.weakTopics.slice(0, 8).map((t) => (
-              <li key={t.topicId} className="flex items-center justify-between">
+            {stats.weakAreas.slice(0, 8).map((t) => (
+              <li key={t.key} className="flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-800">
-                  {t.subjectName} → {t.topicTitle}
+                  {t.subjectName} → {t.label}
+                  <span className="ml-1.5 text-xs font-normal text-slate-400">{t.kind}</span>
                 </span>
                 <Badge tone={t.accuracy >= 70 ? "green" : t.accuracy >= 50 ? "amber" : "red"}>
                   {t.accuracy}%
@@ -93,7 +94,7 @@ export default async function ProgressPage() {
                   className="flex items-center justify-between px-4 py-3 hover:bg-slate-50"
                 >
                   <span className="text-sm font-medium text-slate-800">
-                    {t.mode === "PRACTICE" ? "Practice session" : "Exam"} · {t.totalQuestions} questions
+                    {testModeLabel(t.mode)} · {t.totalQuestions} questions
                   </span>
                   <span className="text-sm text-slate-500">
                     {t.score ?? 0}/{t.totalQuestions} · {t.percent}%

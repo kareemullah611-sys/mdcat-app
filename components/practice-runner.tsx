@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/cn";
+import { postJson } from "@/lib/client-fetch";
 
 export type RunnerQuestion = {
   questionId: string;
@@ -36,8 +37,13 @@ export function PracticeRunner({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [finished, setFinished] = useState(false);
+  const [finishing, setFinishing] = useState(false);
+  const [finishError, setFinishError] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const startRef = useRef<number>(0);
+  // State updates are not visible until React commits, so two clicks in the same
+  // frame would both pass a `busy` check and post twice. The ref is immediate.
+  const answeringRef = useRef(false);
 
   useEffect(() => {
     startRef.current = Date.now();
@@ -49,23 +55,27 @@ export function PracticeRunner({
     : -1;
 
   async function answerOption(optionId: string) {
-    if (busy || feedback) return;
+    if (answeringRef.current || feedback) return;
+    answeringRef.current = true;
     setBusy(true);
     setSelected(optionId);
     setError(null);
     // eslint-disable-next-line react-hooks/purity -- wall-clock measurement is inherently impure
     const timeSpent = Math.max(1, Math.round((Date.now() - startRef.current) / 1000));
-    const res = await fetch(`/api/tests/${testId}/answer`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ questionId: question.questionId, optionId, timeSpentSeconds: timeSpent }),
-    });
-    if (!res.ok) {
-      setError("Could not save your answer. Please try again.");
-      setBusy(false);
+    const result = await postJson<{
+      isCorrect: boolean;
+      correctOptionId: string | null;
+      explanation: string | null;
+      sourceType: string | null;
+      sourceReference: string | null;
+    }>(`/api/tests/${testId}/answer`, { questionId: question.questionId, optionId, timeSpentSeconds: timeSpent });
+    answeringRef.current = false;
+    setBusy(false);
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
-    const data = await res.json();
+    const data = result.data;
     if (data.isCorrect) setCorrectCount((c) => c + 1);
     setFeedback({
       isCorrect: data.isCorrect,
@@ -74,7 +84,6 @@ export function PracticeRunner({
       sourceType: data.sourceType,
       sourceReference: data.sourceReference,
     });
-    setBusy(false);
   }
 
   function next() {
@@ -83,9 +92,24 @@ export function PracticeRunner({
       setSelected(null);
       setFeedback(null);
       startRef.current = Date.now();
-    } else {
-      setFinished(true);
     }
+  }
+
+  /**
+   * Completing the session is what makes it reviewable and scoreable: the result
+   * page and the exam history both require a completed test. Retrying is safe.
+   */
+  async function finish() {
+    if (finishing) return;
+    setFinishing(true);
+    setFinishError(null);
+    const result = await postJson(`/api/tests/${testId}/finish`);
+    setFinishing(false);
+    if (!result.ok) {
+      setFinishError(result.error);
+      return;
+    }
+    setFinished(true);
   }
 
   if (finished) {
@@ -97,7 +121,10 @@ export function PracticeRunner({
           {correctCount} / {questions.length} correct
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link href="/practice" className="inline-flex h-11 items-center rounded-lg bg-slate-900 px-5 text-sm font-medium text-white transition-colors hover:bg-slate-700">
+          <Link href={`/tests/${testId}/result`} className="inline-flex h-11 items-center rounded-lg bg-slate-900 px-5 text-sm font-medium text-white transition-colors hover:bg-slate-700">
+            Review this session
+          </Link>
+          <Link href="/practice" className="inline-flex h-11 items-center rounded-lg border border-slate-300 px-5 text-sm font-medium text-slate-800 hover:bg-slate-100">
             Practice again
           </Link>
           <Link href="/dashboard" className="inline-flex h-11 items-center rounded-lg border border-slate-300 px-5 text-sm font-medium text-slate-800 hover:bg-slate-100">
@@ -182,10 +209,25 @@ export function PracticeRunner({
       )}
 
       <div className="mt-6 flex justify-end">
-        <Button onClick={next} disabled={!feedback || busy} size="lg">
-          {idx + 1 < questions.length ? "Next question" : "Finish"}
-        </Button>
+        {idx + 1 < questions.length ? (
+          <Button onClick={next} disabled={!feedback || busy} size="lg">
+            Next question
+          </Button>
+        ) : (
+          <Button onClick={() => void finish()} disabled={!feedback || busy || finishing} size="lg">
+            {finishing ? "Finishing…" : "Finish session"}
+          </Button>
+        )}
       </div>
+
+      {finishError ? (
+        <p role="alert" className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          {finishError}{" "}
+          <button type="button" onClick={() => void finish()} className="font-medium underline">
+            Try again
+          </button>
+        </p>
+      ) : null}
     </div>
   );
 }

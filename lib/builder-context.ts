@@ -7,7 +7,9 @@ export async function getBuilderContext(): Promise<BuilderContext> {
     prisma.schoolClass.findMany({ orderBy: { grade: "asc" } }),
     prisma.subject.findMany({ orderBy: { name: "asc" } }),
     prisma.chapter.findMany({
-      where: { status: "PUBLISHED" },
+      // Chapter.status alone let chapters of a DRAFT book appear as selectable
+      // chips, while /study hid that book entirely.
+      where: { status: "PUBLISHED", book: { status: "PUBLISHED" } },
       include: { book: { include: { subject: true, class: true, board: true } } },
       orderBy: { title: "asc" },
     }),

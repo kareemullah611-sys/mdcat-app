@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireProfile } from "@/lib/session";
-import { getStudentStats } from "@/lib/stats";
+import { getStudentStats, testModeLabel } from "@/lib/stats";
 import { getStudentProfile } from "@/lib/progress-helpers";
 import { Badge, Card, Progress, EmptyState } from "@/components/ui";
 
@@ -19,7 +19,7 @@ export default async function DashboardPage() {
   ]);
   const subjects = profile?.subjects.map((s) => s.subject) ?? [];
 
-  const weakTopics = stats.weakTopics.slice(0, 3);
+  const weakAreas = stats.weakAreas.slice(0, 3);
   const hasAttempts = stats.overallAttempted > 0;
 
   return (
@@ -84,21 +84,23 @@ export default async function DashboardPage() {
 
         <Card>
           <h2 className="mb-3 font-semibold">Weak areas</h2>
-          {weakTopics.length === 0 ? (
+          {weakAreas.length === 0 ? (
             <p className="text-sm text-slate-500">
               {hasAttempts
-                ? "Nothing to report yet — answer more questions per topic for a reliable signal."
-                : "Your weak areas appear here after you answer a few questions in a topic."}
+                ? "Nothing weak yet — answer a few more questions in each topic or chapter to sharpen this."
+                : "Your weak areas appear here after you answer a few questions."}
             </p>
           ) : (
             <ul className="space-y-3">
-              {weakTopics.map((t) => (
-                <li key={t.topicId}>
+              {weakAreas.map((t) => (
+                <li key={t.key}>
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium text-slate-800">
-                      {t.subjectName} → {t.topicTitle}
+                      {t.subjectName} → {t.label}
                     </span>
-                    <span className="text-slate-500">{t.accuracy}%</span>
+                    <span className="text-slate-500">
+                      {t.accuracy}% · {t.correct}/{t.attempted}
+                    </span>
                   </div>
                   <div className="mt-1">
                     <Progress value={t.accuracy} />
@@ -137,7 +139,7 @@ export default async function DashboardPage() {
                 >
                   <div>
                     <p className="text-sm font-medium text-slate-800">
-                      {t.mode === "PRACTICE" ? "Practice session" : "Exam"}
+                      {testModeLabel(t.mode)}
                     </p>
                     <p className="text-xs text-slate-500">
                       {t.submittedAt ? new Date(t.submittedAt).toLocaleString() : ""}

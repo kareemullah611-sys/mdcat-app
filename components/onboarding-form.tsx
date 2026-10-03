@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { onboardingSchema } from "@/lib/schemas";
+import { postJson } from "@/lib/client-fetch";
 import { Button, ChipToggle, Field, Select } from "@/components/ui";
 import type { Board, SchoolClass, Subject } from "@prisma/client";
 
@@ -10,14 +11,21 @@ type Props = {
   boards: Board[];
   classes: SchoolClass[];
   subjects: Subject[];
+  /**
+   * Current settings, when the form is opened to edit an existing profile
+   * ("Edit settings" on /profile). Without these the form rendered blank and
+   * saving it replaced the student's class, board and subjects with the blanks.
+   */
+  defaults?: { classId?: string; boardId?: string; goal?: string; subjectIds?: string[] };
+  submitLabel?: string;
 };
 
-export function OnboardingForm({ boards, classes, subjects }: Props) {
+export function OnboardingForm({ boards, classes, subjects, defaults, submitLabel }: Props) {
   const router = useRouter();
-  const [classId, setClassId] = useState("");
-  const [boardId, setBoardId] = useState("");
-  const [goal, setGoal] = useState("MDCAT");
-  const [subjectIds, setSubjectIds] = useState<string[]>([]);
+  const [classId, setClassId] = useState(defaults?.classId ?? "");
+  const [boardId, setBoardId] = useState(defaults?.boardId ?? "");
+  const [goal, setGoal] = useState(defaults?.goal ?? "MDCAT");
+  const [subjectIds, setSubjectIds] = useState<string[]>(defaults?.subjectIds ?? []);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -30,14 +38,10 @@ export function OnboardingForm({ boards, classes, subjects }: Props) {
     }
     setError(null);
     setLoading(true);
-    const res = await fetch("/api/onboarding", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(parsed.data),
-    });
-    if (!res.ok) {
-      setError("Could not save your settings. Please try again.");
-      setLoading(false);
+    const result = await postJson("/api/onboarding", parsed.data);
+    setLoading(false);
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     router.push("/dashboard");
@@ -94,7 +98,7 @@ export function OnboardingForm({ boards, classes, subjects }: Props) {
 
       <div className="flex items-center justify-between">
         <Button type="submit" disabled={loading}>
-          {loading ? "Saving…" : "Continue to dashboard"}
+          {loading ? "Saving…" : (submitLabel ?? "Continue to dashboard")}
         </Button>
       </div>
     </form>

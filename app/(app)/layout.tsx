@@ -18,7 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
-          <Link href="/dashboard" className="text-base font-bold text-slate-900">
+          <Link href="/dashboard" className="truncate text-base font-bold text-slate-900">
             MDCAT Pakistan
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
@@ -32,7 +32,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </Link>
             ))}
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             {user.isAdmin ? (
               <Link
                 href="/admin"
@@ -43,8 +43,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             ) : null}
             <Link
               href="/profile"
-              className="hidden h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white sm:flex"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white"
               title={user.email}
+              aria-label="Account and settings"
             >
               {(user.name ?? user.email).slice(0, 1).toUpperCase()}
             </Link>

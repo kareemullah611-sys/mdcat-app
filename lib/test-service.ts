@@ -86,6 +86,38 @@ export function buildQuestionWhere(
 }
 
 /**
+ * The board-practice pool for one textbook scope (a book or a single chapter).
+ *
+ * The study pages display "N MCQs" and then link into practice, which applies
+ * board *and* class on top of the chapter. Counting on `chapterId` alone
+ * therefore advertised questions the engine could not draw. Building the count
+ * from `buildQuestionWhere` keeps the two from drifting apart.
+ */
+export function buildTextbookScopeWhere(scope: {
+  subjectId: string;
+  boardId: string;
+  classId: string;
+  chapterIds?: string[];
+}): Prisma.QuestionWhereInput {
+  return buildQuestionWhere({
+    mode: "PRACTICE",
+    scope: "BOARD",
+    boardIds: [scope.boardId],
+    classIds: [scope.classId],
+    subjectIds: [scope.subjectId],
+    chapterIds: scope.chapterIds ?? [],
+    topicIds: [],
+    difficulties: [],
+    questionTypes: [],
+    sourceTypes: [],
+    minRelevance: 0,
+    historyFilter: "MIXED",
+    count: 1,
+    timeLimitSeconds: null,
+  });
+}
+
+/**
  * Spec §74: resolve filters → apply history → fetch candidates → balance
  * topics → randomize → create immutable Test snapshot (with presented option
  * order). One `Test` row reused across all future modes (practice/exam/past/mock).
@@ -98,20 +130,23 @@ export async function buildTest(userId: string, input: TestFilterInput) {
   });
   const everAnswered = new Set(history.map((h) => h.questionId));
   const incorrectIds = new Set(history.filter((h) => !h.isCorrect).map((h) => h.questionId));
+  const correctIds = history.filter((h) => h.isCorrect).map((h) => h.questionId);
 
   let historyIds: { exclude?: string[]; include?: string[] } | undefined;
-  let bookmarkIds: string[] | undefined;
   if (input.historyFilter === "NEVER_ATTEMPTED" && everAnswered.size > 0) {
     historyIds = { exclude: [...everAnswered] };
   } else if (input.historyFilter === "INCORRECT") {
     historyIds = { include: [...incorrectIds] };
+  } else if (input.historyFilter === "CORRECT") {
+    // Previously this branch did not exist, so "correct so far" silently
+    // behaved like MIXED and returned everything.
+    historyIds = { include: correctIds };
   } else if (input.historyFilter === "BOOKMARKED") {
     const bookmarks = await prisma.bookmark.findMany({
       where: { userId, targetType: "QUESTION" },
       select: { targetId: true },
     });
-    bookmarkIds = bookmarks.map((b) => b.targetId);
-    historyIds = { include: bookmarkIds };
+    historyIds = { include: bookmarks.map((b) => b.targetId) };
   }
 
   // MDCAT scope resolves the syllabus version the paper is drawn from (§74 step 2).
@@ -254,6 +289,53 @@ export async function submitExam(testId: string, userId: string, answers: Submit
 }
 
 /**
+ * Finish a practice session.
+ *
+ * Practice records each answer as it is given (for instant feedback and durable
+ * weakness history), so finishing must only aggregate what is already stored on
+ * the snapshot — it deliberately does *not* log `AnswerHistory` again, which a
+ * call to `submitExam` would do and thereby count every practice question twice
+ * in lifetime accuracy.
+ *
+ * Completing the test is what makes the session reviewable: the result page and
+ * the exam history both require `status === "COMPLETED"`.
+ */
+export async function finishPracticeSession(testId: string, userId: string) {
+  const test = await prisma.test.findUnique({
+    where: { id: testId },
+    include: { questions: { select: { isCorrect: true, timeSpentSeconds: true } } },
+  });
+
+  if (!test) return { error: "NOT_FOUND" as const };
+  if (test.userId !== userId) return { error: "FORBIDDEN" as const };
+  if (test.mode !== "PRACTICE") return { error: "NOT_PRACTICE" as const };
+  // Finishing twice is a no-op, so a retried request cannot double-count.
+  if (test.status === "COMPLETED") {
+    return { ok: true as const, testId, alreadyFinished: true, score: test.score ?? 0 };
+  }
+
+  const correct = test.questions.filter((tq) => tq.isCorrect === true).length;
+  const incorrect = test.questions.filter((tq) => tq.isCorrect === false).length;
+  const unanswered = test.questions.length - correct - incorrect;
+  const timeUsedSeconds = test.questions.reduce((sum, tq) => sum + (tq.timeSpentSeconds ?? 0), 0);
+
+  await prisma.test.update({
+    where: { id: testId },
+    data: {
+      status: "COMPLETED",
+      submittedAt: new Date(),
+      score: correct,
+      correctCount: correct,
+      incorrectCount: incorrect,
+      unansweredCount: unanswered,
+      timeUsedSeconds,
+    },
+  });
+
+  return { ok: true as const, testId, alreadyFinished: false, score: correct };
+}
+
+/**
  * Practice mode: record a single answer with immediate machine feedback (§29).
  * Question remains in the same Test snapshot; history is logged durably.
  */
@@ -267,6 +349,7 @@ export async function recordPracticeAnswer(
   const test = await prisma.test.findUnique({ where: { id: testId } });
   if (!test || test.userId !== userId) return null;
   if (test.mode !== "PRACTICE") return null;
+  if (test.status === "COMPLETED") return null;
 
   const question = await prisma.question.findUnique({
     where: { id: questionId },
@@ -276,6 +359,14 @@ export async function recordPracticeAnswer(
 
   const correctOption = question.options.find((o) => o.isCorrect);
   const isCorrect = optionId !== null && correctOption?.id === optionId;
+
+  // One history row per question per session: re-answering (a double click, a
+  // retry after a dropped response) updates the snapshot instead of appending a
+  // second row, which would otherwise inflate lifetime attempts and accuracy.
+  const alreadyLogged = await prisma.answerHistory.findFirst({
+    where: { userId, testId, questionId },
+    select: { id: true },
+  });
 
   await prisma.$transaction([
     prisma.testQuestion.update({
@@ -288,17 +379,21 @@ export async function recordPracticeAnswer(
         answeredAt: optionId !== null ? new Date() : null,
       },
     }),
-    prisma.answerHistory.create({
-      data: {
-        userId,
-        questionId,
-        testId,
-        selectedOptionId: optionId,
-        isCorrect,
-        timeSpentSeconds,
-        mode: "PRACTICE",
-      },
-    }),
+    ...(alreadyLogged
+      ? []
+      : [
+          prisma.answerHistory.create({
+            data: {
+              userId,
+              questionId,
+              testId,
+              selectedOptionId: optionId,
+              isCorrect,
+              timeSpentSeconds,
+              mode: "PRACTICE",
+            },
+          }),
+        ]),
   ]);
 
   return {

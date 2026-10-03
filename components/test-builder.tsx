@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { testFilterSchema, type TestFilterInput } from "@/lib/schemas";
 import { Button, ChipToggle, Field, Input, Select, Card } from "@/components/ui";
 import { DIFFICULTIES, QUESTION_TYPES, SOURCE_TYPES, type TestScope } from "@/lib/constants";
+import { postJson } from "@/lib/client-fetch";
 import type { Board, SchoolClass, Subject } from "@prisma/client";
 
 export type BuilderContext = {
@@ -61,7 +62,7 @@ export function TestBuilder({ context, defaultMode = "PRACTICE", defaults, compa
       boardIds: scope === "BOARD" ? boardIds : [],
       classIds: scope === "MDCAT" && mdcatBothYears ? [] : classIds,
       subjectIds,
-chapterIds,
+      chapterIds,
       topicIds: [],
       difficulties: difficulties as TestFilterInput["difficulties"],
       questionTypes: questionTypes as TestFilterInput["questionTypes"],
@@ -78,19 +79,15 @@ chapterIds,
     }
     setError(null);
     setLoading(true);
-    const res = await fetch("/api/tests", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(parsed.data),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      setError(data?.error ?? "Could not create test.");
-      setLoading(false);
+    const result = await postJson<{ testId: string }>("/api/tests", parsed.data);
+    // Always clear the loading flag: a dropped connection rejects the request,
+    // which would otherwise leave the button disabled with no message.
+    setLoading(false);
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
-    const data = await res.json();
-    router.push(`/tests/${data.testId}`);
+    router.push(`/tests/${result.data.testId}`);
   }
 
   return (

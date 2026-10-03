@@ -121,8 +121,16 @@ export default function SignupPage() {
       setLoading(false);
       return;
     }
-    // Auto sign-in after signup, then onboarding.
-    await signIn.email({ email, password });
+    // Auto sign-in after signup, then onboarding. The normalized address is the
+    // one that was registered, and a failed sign-in is reported rather than
+    // silently bouncing the user off /onboarding back to /login.
+    const signInResult = await signIn.email({ email: normalizedEmail, password });
+    setLoading(false);
+    if (signInResult.error) {
+      setError("Your account was created, but we could not sign you in automatically. Please sign in.");
+      router.push("/login");
+      return;
+    }
     router.push("/onboarding");
     router.refresh();
   }
@@ -171,7 +179,12 @@ export default function SignupPage() {
             value={username}
             aria-invalid={usernameError ? true : undefined}
             aria-describedby="username-status"
-            onBlur={() => setUsernameError(usernameValidationError(username))}
+            onBlur={() => {
+              // Keep a server-side "taken" verdict: clearing it left the submit
+              // button disabled with no message explaining why.
+              if (usernameStatus === "taken") return;
+              setUsernameError(usernameValidationError(username));
+            }}
             onChange={(e) => {
               setUsername(e.target.value);
               setUsernameError(null);
@@ -181,6 +194,7 @@ export default function SignupPage() {
           <span id="username-status" aria-live="polite" className="block min-h-4 text-xs">
             {usernameStatus === "checking" ? <span className="text-slate-500">Checking username…</span> : null}
             {usernameStatus === "available" ? <span className="text-emerald-700">✓ Username is available</span> : null}
+            {usernameStatus === "taken" ? <span className="text-red-700">That username is already taken.</span> : null}
             {usernameStatus === "error" ? <span className="text-slate-500">Unable to check username right now. You can still try submitting the form.</span> : null}
           </span>
         </Field>

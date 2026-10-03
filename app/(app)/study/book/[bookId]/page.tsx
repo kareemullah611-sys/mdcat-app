@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { buildTextbookScopeWhere } from "@/lib/test-service";
 import { requireProfile } from "@/lib/session";
 import { Badge } from "@/components/ui";
 import { TextbookReader } from "@/components/textbook-reader";
@@ -21,13 +22,29 @@ export default async function BookPage({ params }: RouteProps) {
     },
   });
   if (!book) notFound();
+  // Same reason as the chapter page: an unpublished book has no reader.
+  if (book.status !== "PUBLISHED") notFound();
 
-  const counts = await prisma.question.groupBy({
-    by: ["chapterId"],
-    where: { chapterId: { in: book.chapters.map((c) => c.id) }, status: "PUBLISHED" },
-    _count: { _all: true },
-  });
-  const countByChapter = new Map(counts.map((c) => [c.chapterId, c._count._all]));
+  // Per-chapter counts under the board + class scope of this book, so a badge
+  // never promises questions that board practice cannot draw.
+  const chapterIds = book.chapters.map((chapter) => chapter.id);
+  const counts = chapterIds.length
+    ? await prisma.question.groupBy({
+        by: ["chapterId"],
+        where: buildTextbookScopeWhere({
+          subjectId: book.subjectId,
+          boardId: book.boardId,
+          classId: book.classId,
+          chapterIds,
+        }),
+        _count: { _all: true },
+      })
+    : [];
+  const countByChapter = new Map(
+    counts
+      .filter((row): row is typeof row & { chapterId: string } => row.chapterId !== null)
+      .map((row) => [row.chapterId, row._count._all]),
+  );
 
   return (
     <div>
