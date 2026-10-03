@@ -166,7 +166,10 @@ npm test
 
 **Or load it from the admin UI**, which runs the same importer in the background
 and is the supported path for a deployed instance: sign in as an admin, open
-**Admin → Load bank**, run a dry run, then load and publish. A load takes a few
+**Admin → Load bank**, run a dry run, then load and publish. A real load seeds the
+PMDC MDCAT 2025 syllabus first if it is out of date, so a database seeded from an
+older curriculum snapshot self-heals; **Seed MDCAT syllabus** does that step on its
+own if a dry run reports unknown outcomes. A load takes a few
 minutes; the page polls its own progress, and only one load may run at a time.
 Because the questions ship inside the deploy image, a deployed instance needs no
 file transfer — the endpoint is `POST /api/admin/mcq-bank`.

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireApiAdmin } from "@/lib/api-auth";
 import { guardMutation } from "@/lib/request-guard";
-import { getBankImportStatus, startBankImportJob } from "@/lib/mcq-bank-job";
+import { getBankImportStatus, seedSyllabusForAdmin, startBankImportJob } from "@/lib/mcq-bank-job";
 import { BANK_BATCHES } from "@/lib/data/mcq-bank/banks";
 import type { BankSubject } from "@/lib/data/mcq-bank/coverage";
 
@@ -42,6 +42,7 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json().catch(() => null)) as {
+    action?: "seedSyllabus";
     subject?: string;
     grade?: number;
     batch?: string;
@@ -51,6 +52,14 @@ export async function POST(request: Request) {
 
   if (!body || typeof body !== "object") {
     return NextResponse.json({ error: "Expected a JSON body" }, { status: 400 });
+  }
+
+  // Prerequisite for the bank: the versioned PMDC MDCAT 2025 syllabus. A real
+  // load seeds it automatically, but this lets an operator fix a failing dry
+  // run first. Idempotent.
+  if (body.action === "seedSyllabus") {
+    const syllabus = await seedSyllabusForAdmin(admin.userId);
+    return NextResponse.json({ syllabus, job: getBankImportStatus() });
   }
 
   const scope = {

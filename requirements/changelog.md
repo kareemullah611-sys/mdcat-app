@@ -4,6 +4,15 @@ Format: `YYYY-MM-DD — {ADDED | MODIFIED | REPLACED | REMOVED | ARCHITECTURAL}`
 
 ---
 
+## 2026-10-03 — The bank loader brings the syllabus up to date itself
+
+- **FIXED** — Loading the bank in production failed with "183 outcome reference(s) are unknown". The production database had been seeded from an **older, partial** curriculum snapshot (106 of 289 outcomes); the 300 pilot questions only ever cited the outcomes they used, so nothing had ever needed the rest. The bank importer correctly refused to write a batch whose outcomes it could not resolve, but the prerequisite could only be satisfied over SSH.
+- **ADDED** — `seedMdcatSyllabus2025` in `lib/data/mdcat-syllabus-seed.ts`, extracted from the CLI script so the admin loader can guarantee the prerequisite. A real (non-dry) load now seeds the syllabus first and records what it did in the job status; a dry run still writes nothing and simply reports the gaps.
+- **ADDED** — A "Seed MDCAT syllabus" button and `POST /api/admin/mcq-bank { action: "seedSyllabus" }`, so an operator whose dry run reports unknown outcomes can fix the prerequisite and retry without shell access.
+- **ADDED** — `MDCAT_SYLLABUS_OFFICIAL_TOTAL = 289` and a subject-level `created` count, so a partly seeded database is detectable and reported ("289 outcomes ready, 183 newly added") instead of failing opaquely.
+- **VERIFIED** — Reproduced the production failure on a throwaway database with no syllabus seeded: dry run refused with `SYLLABUS_MISSING`, seeding reported "289 newly added", the same dry run then passed, re-seeding reported "0 newly added" (idempotent), and a full 3,000-question load ran through the HTTP admin endpoint against a deliberately truncated syllabus — auto-seeding the missing outcomes, 30/30 batches, 3,000 questions `PUBLISHED`, all 3,000 reachable by MDCAT scope. 8 job tests and 4 seed tests, `tsc`, lint and `next build` clean.
+- **NOTE** — `scripts/seed-mdcat-syllabus-2025.ts` is now a thin wrapper over the shared seed; its console output gained the newly-added count.
+
 ## 2026-10-03 — MDCAT papers are scoped to the syllabus, not the board
 
 - **FIXED** — A student on a board with no mapped chapters (Punjab, Sindh, KPK) got an empty or four-question MDCAT paper. `buildTest` filtered **every** test by board, so `PUNJAB` matched nothing in the authored bank. Spec §3 MODE B scopes MDCAT preparation to the current syllabus and relevant learning outcomes, with board selection merely "remaining available" — it was gating the pool. A test now carries an explicit `scope`: `BOARD` filters by board as before, `MDCAT` filters by membership of a learning outcome in the `PMDC_MDCAT_2025_FINAL` syllabus via `QuestionMapping.syllabusOutcome` and ignores the board entirely.

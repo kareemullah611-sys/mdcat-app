@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { runBankImport, type ImportBatchResult, type ImportReport, type ImportScope } from "@/lib/data/mcq-bank/import";
+import { seedMdcatSyllabus2025, type SyllabusSeedResult } from "@/lib/data/mdcat-syllabus-seed";
 import { securityLog, securityLogAdminMutation, securityLogError } from "@/lib/security-log";
 
 /**
@@ -29,6 +30,8 @@ export type BankImportJobStatus = {
   issues: string[];
   error: string | null;
   report: ImportReport | null;
+  /** Set when a run seeded the syllabus first, or via the explicit action. */
+  syllabus: SyllabusSeedResult | null;
 };
 
 const job: BankImportJobStatus = {
@@ -45,6 +48,7 @@ const job: BankImportJobStatus = {
   issues: [],
   error: null,
   report: null,
+  syllabus: null,
 };
 
 export function getBankImportStatus(): BankImportJobStatus {
@@ -71,6 +75,7 @@ export function startBankImportJob(
     issues: [],
     error: null,
     report: null,
+    syllabus: null,
   });
   securityLogAdminMutation({
     action: "mcq_bank_import_start",
@@ -79,14 +84,25 @@ export function startBankImportJob(
     resourceId: `${scope.subject ?? "ALL"}/${scope.grade ?? "ALL"}`,
   });
 
-  void runBankImport(prisma, scope, {
-    onBatchComplete: (result, completed, total) => {
-      job.batches.push(result);
-      job.completedBatches = completed;
-      job.totalBatches = total;
-      job.writtenQuestions += result.questions;
-    },
-  })
+  // A real load first brings the syllabus up to date. A database seeded from an
+  // older curriculum snapshot holds only the outcomes its questions happened to
+  // cite, and the importer refuses any batch whose outcomes it cannot resolve —
+  // so seeding first is what turns "183 unknown outcomes" into a clean load.
+  // A dry run writes nothing at all and simply reports the gaps.
+  const prepare = scope.dryRun === true ? Promise.resolve(null) : seedMdcatSyllabus2025(prisma);
+
+  void prepare
+    .then((seeded) => {
+      job.syllabus = seeded;
+      return runBankImport(prisma, scope, {
+        onBatchComplete: (result, completed, total) => {
+          job.batches.push(result);
+          job.completedBatches = completed;
+          job.totalBatches = total;
+          job.writtenQuestions += result.questions;
+        },
+      });
+    })
     .then((report) => {
       job.report = report;
       job.state = "COMPLETED";
@@ -111,4 +127,15 @@ export function startBankImportJob(
     });
 
   return { started: true };
+}
+
+/**
+ * Bring the syllabus up to date on its own, for an operator who wants the
+ * prerequisite satisfied before running a dry run. Idempotent.
+ */
+export async function seedSyllabusForAdmin(adminId: string): Promise<SyllabusSeedResult> {
+  const result = await seedMdcatSyllabus2025(prisma);
+  job.syllabus = result;
+  securityLog("mcq_bank_syllabus_seed", { adminId, total: result.total, created: result.created }, "info");
+  return result;
 }

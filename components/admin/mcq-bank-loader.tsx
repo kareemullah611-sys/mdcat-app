@@ -25,6 +25,7 @@ export type McqBankJob = {
   batches: BatchResult[];
   issues: string[];
   error: string | null;
+  syllabus: { code: string; total: number; created: number } | null;
 };
 
 const SUBJECTS = ["", "BIOLOGY", "CHEMISTRY", "PHYSICS"];
@@ -49,6 +50,30 @@ export function McqBankLoader({ initialJob }: { initialJob: McqBankJob }) {
     const timer = setInterval(() => void load(), 2000);
     return () => clearInterval(timer);
   }, [job?.state, load]);
+
+  async function seedSyllabus() {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const response = await fetch("/api/admin/mcq-bank", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "seedSyllabus" }),
+      });
+      const payload = (await response.json()) as { error?: string; syllabus?: { total: number; created: number } };
+      if (!response.ok) {
+        setMessage(payload.error ?? `Could not seed the syllabus (HTTP ${response.status})`);
+        return;
+      }
+      setMessage(
+        `Syllabus ready: ${payload.syllabus?.total ?? 0} outcomes, ${payload.syllabus?.created ?? 0} newly added.`,
+      );
+      await load();
+      router.refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function start(dryRun: boolean) {
     setBusy(true);
@@ -126,6 +151,15 @@ export function McqBankLoader({ initialJob }: { initialJob: McqBankJob }) {
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
+            onClick={() => void seedSyllabus()}
+            disabled={busy || running}
+            title="Adds or refreshes the 289 official PMDC MDCAT 2025 outcomes. A real load does this automatically; run it first if a dry run reports unknown outcomes."
+            className="rounded border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            Seed MDCAT syllabus
+          </button>
+          <button
+            type="button"
             onClick={() => void start(true)}
             disabled={busy || running}
             className="rounded bg-slate-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
@@ -177,6 +211,12 @@ export function McqBankLoader({ initialJob }: { initialJob: McqBankJob }) {
             <div className="h-2 w-full rounded bg-slate-200">
               <div className="h-2 rounded bg-blue-600 transition-all" style={{ width: `${percent}%` }} />
             </div>
+          ) : null}
+          {job.syllabus ? (
+            <p className="text-sm text-slate-600">
+              Syllabus {job.syllabus.code}: {job.syllabus.total} outcomes ready
+              {job.syllabus.created > 0 ? ` (${job.syllabus.created} newly added)` : " (already up to date)"}.
+            </p>
           ) : null}
           {job.error ? <p className="text-sm text-red-700">{job.error}</p> : null}
           {job.issues.length > 0 ? (

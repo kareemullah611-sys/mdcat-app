@@ -72,8 +72,12 @@ export const TEST_SCOPES = ["BOARD", "MDCAT"] as const;
 export type TestScope = (typeof TEST_SCOPES)[number];
 
 // The MDCAT syllabus a MODE B paper is resolved against. Seeded by
-// scripts/seed-mdcat-syllabus-2025.ts.
+// scripts/seed-mdcat-syllabus-2025.ts, or "Admin -> Load bank".
 export const MDCAT_SYLLABUS_CODE = "PMDC_MDCAT_2025_FINAL";
+// 69 Biology + 120 Chemistry + 100 Physics, from the published PM&DC
+// curriculum. Asserted against the curriculum data in the tests so a partially
+// seeded database is detectable.
+export const MDCAT_SYLLABUS_OFFICIAL_TOTAL = 289;
 
 export const TEST_STATUS = ["IN_PROGRESS", "COMPLETED", "ABANDONED"] as const;
 export type TestStatus = (typeof TEST_STATUS)[number];
