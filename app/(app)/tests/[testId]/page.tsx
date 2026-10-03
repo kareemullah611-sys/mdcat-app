@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireProfile } from "@/lib/session";
 import { PracticeRunner, type RunnerQuestion } from "@/components/practice-runner";
 import { ExamRunner } from "@/components/exam-runner";
+import { ExitTestLink } from "@/components/back-nav";
 
 type RouteProps = { params: Promise<{ testId: string }> };
 
@@ -48,8 +49,15 @@ export default async function TestRunPage({ params }: RouteProps) {
 
   // Only the presented options are sent to the browser; correct keys stay server-side
   // and are evaluated at submit time (spec §92, §33).
+  const timed = test.mode === "EXAM" && Boolean(test.timeLimitSeconds);
+
   return (
     <div>
+      <ExitTestLink
+        timed={timed}
+        href={test.mode === "PRACTICE" ? "/practice" : "/exams"}
+        label={test.mode === "PRACTICE" ? "Back to Practice" : "Back to Exams"}
+      />
       {test.mode === "EXAM" ? (
         <ExamRunner testId={test.id} questions={questions} timeLimitSeconds={test.timeLimitSeconds} />
       ) : (

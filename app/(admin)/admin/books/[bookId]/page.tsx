@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
@@ -25,10 +24,7 @@ export default async function AdminBookDetailPage({ params }: RouteProps) {
 
   return (
     <div>
-      <Link href="/admin/books" className="text-sm font-medium text-slate-600 hover:text-slate-900">
-        ← Books
-      </Link>
-      <div className="mt-2 flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <h1 className="text-2xl font-bold">{book.title}</h1>
         <Badge>{book.subject.name}</Badge>
         <Badge tone="blue">{book.class.name}</Badge>

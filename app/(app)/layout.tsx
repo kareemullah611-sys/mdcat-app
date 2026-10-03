@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireProfile } from "@/lib/session";
 import { SignOutButton } from "@/components/sign-out-button";
+import { BackNav } from "@/components/back-nav";
 import { cn } from "@/lib/cn";
 
 const NAV = [
@@ -18,9 +19,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
-          <Link href="/dashboard" className="truncate text-base font-bold text-slate-900">
-            MDCAT Pakistan
-          </Link>
+          <div className="flex min-w-0 items-center gap-1">
+            <BackNav />
+            <Link href="/dashboard" className="truncate text-base font-bold text-slate-900">
+              MDCAT Pakistan
+            </Link>
+          </div>
           <nav className="hidden items-center gap-1 md:flex">
             {NAV.map((item) => (
               <Link
@@ -69,7 +73,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         ))}
       </nav>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-20 pt-6 sm:pb-10">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-20 pt-4 sm:pb-10 sm:pt-4">
         {children}
       </main>
     </div>

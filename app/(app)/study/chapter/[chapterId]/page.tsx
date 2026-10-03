@@ -38,11 +38,7 @@ export default async function ChapterPage({ params }: RouteProps) {
 
   return (
     <div>
-      <Link href={`/study/book/${chapter.bookId}`} className="text-sm font-medium text-slate-600 hover:text-slate-900">
-        ← {chapter.book.title}
-      </Link>
-
-      <div className="mt-2">
+      <div>
         <h1 className="text-2xl font-bold">
           {chapter.number ? `${chapter.number}. ` : ""}
           {chapter.title}

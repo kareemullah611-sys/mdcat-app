@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/session";
+import { BackNav } from "@/components/back-nav";
 
 const ITEMS = [
   { href: "/admin", label: "Dashboard" },
@@ -16,8 +17,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-base font-bold">
+          <div className="flex items-center gap-3">
+            <BackNav />
+            <Link href="/dashboard" className="truncate text-base font-bold">
               MDCAT Pakistan
             </Link>
             <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-semibold text-white">
@@ -43,7 +45,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </nav>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-4">
+        {children}
+      </main>
     </div>
   );
 }

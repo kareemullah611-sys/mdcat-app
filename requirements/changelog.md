@@ -4,6 +4,16 @@ Format: `YYYY-MM-DD — {ADDED | MODIFIED | REPLACED | REMOVED | ARCHITECTURAL}`
 
 ---
 
+## 2026-10-03 — Back navigation on every page that needs it
+
+- **ADDED** — A back control on every page reached by drilling in. On a phone there is no browser chrome and the app's own navigation only reaches `/dashboard`, `/study`, `/practice`, `/exams` and `/progress`, so `/profile`, `/profile/security`, `/study/book/[bookId]`, `/study/chapter/[chapterId]`, `/tests/[testId]`, `/tests/[testId]/result` and every admin record were dead ends.
+- **ARCHITECTURAL** — The rule is derived from the pathname in `lib/back-nav-rules.ts` and mounted **once per layout** (`(app)`, `(admin)`, `(auth)`, and a new `(mfa)` layout for the admin 2FA screen, which sits outside the admin layout and therefore had no navigation at all). Adding a control page-by-page meant every new screen had to remember to, and most did not; a route added in future now inherits a working way back without being touched. The rule and its 12 tests are the specification.
+- **MODIFIED** — The control is hidden where there is genuinely nowhere to go back to: the five top-level routes, `/admin`, the public entry points, and `/onboarding` (sending it to `/dashboard` just bounced straight back through `requireProfile`). It returns to the page the student actually came from, and falls back to the route's parent when the tab has no history to pop.
+- **FIXED** — `/study/book` and `/study/chapter` were being treated as parent routes, but they are dynamic segments with no page: a student who opened a chapter from a shared link, with no history, was sent to a 404 — the exact dead end this control exists to prevent. They are now resolved to `/study`.
+- **MODIFIED** — The test runner supplies its own exit instead of the generic control, because leaving mid-paper is the one case where a back link destroys work: a timed exam confirms first, since it only submits on submit or at zero, while a practice session saves each answer as it is given and leaves without ceremony.
+- **MODIFIED** — Removed the three bespoke `←` links (book, chapter, admin book) so back navigation looks and behaves the same everywhere.
+- **VERIFIED** — Live across every route: absent on the five hubs, `/admin`, `/onboarding` and the auth pages; "Back to Profile", "Back to Study", "Back to Exams", "Back to Admin Questions" and so on where a parent exists; the exam runner offering "Back to Exams" and the practice runner "Back to Practice"; the result page returning to `/exams`. 242 tests, `tsc`, lint and `next build` clean.
+
 ## 2026-10-03 — Frontend flow audit: repair pass
 
 An audit of the student and admin journeys found two broken flows and a batch of
