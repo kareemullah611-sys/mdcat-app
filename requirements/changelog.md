@@ -4,6 +4,13 @@ Format: `YYYY-MM-DD — {ADDED | MODIFIED | REPLACED | REMOVED | ARCHITECTURAL}`
 
 ---
 
+## 2026-10-03 — Admin can see and search by a student's mobile number
+
+- **ADDED** — A **Mobile** column in the admin users list, on both the desktop table and the mobile card view, showing the number captured at registration. An unverified number is marked as such, mirroring the existing email-verification badge — the column exists on the model and is set at sign-up, but was not surfaced anywhere staff could see.
+- **ADDED** — `formatPakistanMobile` in `lib/pakistan-phone.ts`. Registration stores E.164 (`+923001234567`), which is correct for storage and unreadable on screen; staff read it far more often than a script does, so it displays as written in Pakistan, `0300 1234567`. An unrecognised value is passed through untouched rather than guessed at, and a missing number stays a dash.
+- **FIXED** — **The number was captured but unsearchable.** An admin holding a student's mobile number had no way to find the account, since the search covered only name and email. `buildUsersWhere` now also matches the number, and tolerates every way it gets typed: `0300 1234567`, `03001234567`, `3001234567`, `+923001234567`, and partials such as `0333` — the last of which needed the local leading zero stripped, because the stored form has none. The clause is only added when the query could plausibly be a number, so an ordinary name search stays the same two-clause query.
+- **VERIFIED** — 251 tests (9 new), `tsc`, lint and `next build` clean. Live against two users registered as `0300 1234567` and `+923331234567`: both render as `0300 1234567` / `0333 1234567` in both views, and each of the six search spellings returns exactly the matching row.
+
 ## 2026-10-03 — Back navigation on every page that needs it
 
 - **ADDED** — A back control on every page reached by drilling in. On a phone there is no browser chrome and the app's own navigation only reaches `/dashboard`, `/study`, `/practice`, `/exams` and `/progress`, so `/profile`, `/profile/security`, `/study/book/[bookId]`, `/study/chapter/[chapterId]`, `/tests/[testId]`, `/tests/[testId]/result` and every admin record were dead ends.

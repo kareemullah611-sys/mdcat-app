@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { normalizePakistanMobile } from "@/lib/pakistan-phone";
 
 // Pure helpers for the admin users page (read-only).
 // Kept framework-free so the filtering/derivation logic is unit-testable.
@@ -17,9 +18,29 @@ export function buildUsersWhere({
   const where: Prisma.UserWhereInput = {};
   const needle = q?.trim();
   if (needle) {
+    // Staff are often handed a student's mobile number rather than an email, and
+    // it is stored in E.164 while it is written "0300 1234567". The clause is
+    // only added when the query could plausibly be a number, so an ordinary name
+    // search is left exactly as it was.
+    const digits = needle.replace(/[\s()-]/g, "");
+    const phoneForms = new Set<string>();
+    if (digits.length >= 4) {
+      phoneForms.add(digits);
+      // A partial local search such as "0333" has to match the stored
+      // "+923331234567", which carries no leading zero of its own.
+      const withoutLeadingZero = digits.replace(/^0+/, "");
+      if (withoutLeadingZero.length >= 3) phoneForms.add(withoutLeadingZero);
+      const normalized = normalizePakistanMobile(digits);
+      if (normalized) {
+        phoneForms.add(normalized); // +923001234567
+        phoneForms.add(normalized.slice(3)); // 3001234567
+      }
+    }
+
     where.OR = [
       { name: { contains: needle, mode: "insensitive" } },
       { email: { contains: needle, mode: "insensitive" } },
+      ...[...phoneForms].map((form) => ({ phoneNumber: { contains: form, mode: "insensitive" as const } })),
     ];
   }
   if (role) where.role = { code: role };

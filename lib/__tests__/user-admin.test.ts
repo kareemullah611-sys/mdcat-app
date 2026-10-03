@@ -14,6 +14,27 @@ describe("buildUsersWhere", () => {
     expect(where.OR?.[1]).toEqual({ email: { contains: "Ali", mode: "insensitive" } });
   });
 
+  it("finds a student by mobile number typed any of the usual ways", () => {
+    // Stored as +923001234567; staff write it as 0300 1234567, 03001234567,
+    // 3001234567 or +923001234567.
+    for (const query of ["0300 1234567", "03001234567", "3001234567", "+923001234567", "0300-1234567"]) {
+      const where = buildUsersWhere({ q: query });
+      expect(where.OR).toContainEqual({ phoneNumber: { contains: "3001234567", mode: "insensitive" } });
+    }
+  });
+
+  it("matches a partial local number against the stored E.164 form", () => {
+    // "0333" is a prefix of the local number, but the stored value has no leading
+    // zero, so the zero has to be stripped before comparing.
+    const where = buildUsersWhere({ q: "0333" });
+    expect(where.OR).toContainEqual({ phoneNumber: { contains: "333", mode: "insensitive" } });
+  });
+
+  it("does not add a phone clause for an ordinary name or email query", () => {
+    // Keeps the common case a plain two-clause OR.
+    expect(buildUsersWhere({ q: "Ali" }).OR).toHaveLength(2);
+  });
+
   it("ignores blank queries", () => {
     expect(buildUsersWhere({ q: "   " })).toEqual({});
   });

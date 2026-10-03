@@ -5,6 +5,7 @@ import { Badge, Card, EmptyState, Input, PageHeader } from "@/components/ui";
 import { ROLES, type RoleCode } from "@/lib/constants";
 import { daysAgo } from "@/lib/dates";
 import { buildUsersWhere, focusLabel, formatDate, formatDateTime, formatRelative, latestActivity } from "@/lib/user-admin";
+import { formatPakistanMobile } from "@/lib/pakistan-phone";
 
 const ROLE_LIST: RoleCode[] = [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.STUDENT];
 
@@ -137,7 +138,7 @@ export default async function AdminUsersPage({
           {activeRole ? <input type="hidden" name="role" value={activeRole} /> : null}
           {activeProfile ? <input type="hidden" name="profile" value={activeProfile} /> : null}
           <div className="min-w-64 flex-1">
-            <Input name="q" defaultValue={qTrimmed} placeholder="Search by name or email…" aria-label="Search users" />
+            <Input name="q" defaultValue={qTrimmed} placeholder="Search by name, email or mobile…" aria-label="Search users" />
           </div>
           <button
             type="submit"
@@ -216,6 +217,7 @@ export default async function AdminUsersPage({
                     <th className="px-4 py-3 font-medium">Role</th>
                     <th className="px-4 py-3 font-medium">Registered</th>
                     <th className="px-4 py-3 font-medium">Email</th>
+                    <th className="px-4 py-3 font-medium">Mobile</th>
                     <th className="px-4 py-3 font-medium">Onboarding</th>
                     <th className="px-4 py-3 font-medium">Board / Class</th>
                     <th className="px-4 py-3 font-medium">Goal</th>
@@ -231,6 +233,7 @@ export default async function AdminUsersPage({
                     const boardClass = profile?.class ? profile.class.name : null;
                     const goal = focusLabel(profile?.goal, profile?.preparationMode);
                     const lastActive = lastActivity.get(user.id);
+                    const mobile = formatPakistanMobile(user.phoneNumber);
                     return (
                       <tr key={user.id} className="align-top hover:bg-slate-50">
                         <td className="px-4 py-3">
@@ -245,6 +248,18 @@ export default async function AdminUsersPage({
                           <Badge tone={user.emailVerified ? "green" : "amber"}>
                             {user.emailVerified ? "Verified" : "Unverified"}
                           </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-slate-500">
+                          {mobile ? (
+                            <span title={user.phoneNumber ?? undefined}>
+                              {mobile}
+                              {user.phoneNumberVerified ? null : (
+                                <span className="ml-1 text-amber-600">unverified</span>
+                              )}
+                            </span>
+                          ) : (
+                            "—"
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <Badge tone={profile ? "green" : "amber"}>{profile ? "Completed" : "Pending"}</Badge>
@@ -275,6 +290,7 @@ export default async function AdminUsersPage({
                 const boardClass = profile?.class ? profile.class.name : null;
                 const goal = focusLabel(profile?.goal, profile?.preparationMode);
                 const lastActive = lastActivity.get(user.id);
+                const mobile = formatPakistanMobile(user.phoneNumber);
                 return (
                   <Card key={user.id}>
                     <div className="flex items-start justify-between gap-3">
@@ -291,6 +307,15 @@ export default async function AdminUsersPage({
                       <Badge tone={profile ? "green" : "amber"}>{profile ? "Onboarded" : "Onboarding pending"}</Badge>
                     </div>
                     <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs sm:grid-cols-3">
+                      <div>
+                        <dt className="text-slate-400">Mobile</dt>
+                        <dd className="text-slate-700">
+                          {mobile ?? "—"}
+                          {mobile && !user.phoneNumberVerified ? (
+                            <span className="ml-1 text-amber-600">unverified</span>
+                          ) : null}
+                        </dd>
+                      </div>
                       <div>
                         <dt className="text-slate-400">Registered</dt>
                         <dd className="text-slate-700">{user.createdAt ? formatDate(user.createdAt) : "—"}</dd>
